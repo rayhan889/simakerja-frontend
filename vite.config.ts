@@ -7,7 +7,7 @@ import path from 'path'
 export default defineConfig({
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "../"),
+      "@": path.resolve(__dirname, "./src"),
       "@server": path.resolve(__dirname, "../server/src"),
     },
   },
@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
           secure: false,      
           ws: true,
@@ -30,6 +30,16 @@ export default defineConfig({
               console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
             });
           },
+      },
+      '/oauth2': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/login/oauth2': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
       }
     }
   }
