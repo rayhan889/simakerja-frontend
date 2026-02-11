@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/utils/utils';
+import { Button } from '@headlessui/react'
 
 interface GoogleLoginButtonProps {
     className?: string;
@@ -9,15 +10,11 @@ export const GoogleLoginButton = ({ className }: GoogleLoginButtonProps) => {
   const {loginWithGoogle, isLoading} = useAuth();
 
  return (
-    <button
+    <Button
       onClick={loginWithGoogle}
       disabled={isLoading}
-      className={cn(
-        'flex items-center justify-center gap-3 rounded-lg border border-gray-300',
-        'bg-white px-6 py-3 text-sm font-medium text-gray-700',
-        'transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2',
-        'focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed',
-        'disabled:opacity-50',
+      style={{backgroundColor: '#022f2e'}}
+      className={cn(" border border-gray-300 max-w-2xl w-full flex items-center justify-center gap-3 hover:bg-teal-900/90 text-white font-medium px-4 py-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}
     >
@@ -42,6 +39,6 @@ export const GoogleLoginButton = ({ className }: GoogleLoginButtonProps) => {
       </svg>
       
       {isLoading ? 'Memproses...' : 'Masuk dengan Google'}
-    </button>
+    </Button>
  )
 }

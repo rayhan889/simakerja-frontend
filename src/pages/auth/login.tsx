@@ -7,39 +7,29 @@ export const LoginPage = () => {
     const sessionExpired = params.get('session_expired') === 'true';
     
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
-        <div className="text-center">
-          {/* <img
-            src="/logo.svg"
-            alt="SIMAKerja"
-            className="mx-auto h-16 w-auto"
-          /> */}
-          <h2 className="mt-6 text-2xl font-bold text-gray-900">
-            Selamat Datang
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Masuk ke akun SIMAKerja Anda
-          </p>
+    <div className="flex min-h-screen items-center justify-center">
+      <div className='flex flex-col max-w-4xl w-full items-center h-auto p-3 gap-y-6'>
+
+        <div className='flex flex-col items-center gap-y-3'>
+          <img src="/unesa_logo.png" alt="SIMAKerja" className='mx-auto h-20 w-auto' />
+          <div className='flex flex-col'>
+              <h3 className='text-xl font-semibold text-teal-950'>Selamat Datang di SIMAKerja</h3>
+              <span className='text-gray-500 font-medium font-secondary'>
+                Sistem Informasi manajemen dokumen kerja sama Universitas Negeri Surabaya
+              </span>
+          </div>
         </div>
+
+        <p className='font-secondary text-gray-400 text-sm'>Masuk dengan</p>
+
+        <GoogleLoginButton />
 
         {sessionExpired && (
-          <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+          <p className='text-sm text-red-500 mt-4'>
             Sesi Anda telah berakhir. Silakan masuk kembali.
-          </div>
+          </p>
         )}
 
-        <div className="mt-8">
-          <GoogleLoginButton className="w-full" />
-        </div>
-
-        <p className="text-center text-xs text-gray-500">
-          Dengan masuk, Anda menyetujui{' '}
-          <a href="/terms" className="text-primary hover:underline">
-            Syarat & Ketentuan
-          </a>{' '}
-          kami.
-        </p>
       </div>
     </div>
   )
