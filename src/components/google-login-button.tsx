@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-import { Button } from '@headlessui/react'
+import { Button } from '@/components/ui/button';
 
 interface GoogleLoginButtonProps {
     className?: string;
@@ -11,10 +11,11 @@ export const GoogleLoginButton = ({ className }: GoogleLoginButtonProps) => {
 
  return (
     <Button
+      size={'lg'}
       onClick={loginWithGoogle}
       disabled={isLoading}
       style={{backgroundColor: '#022f2e'}}
-      className={cn(" border border-gray-300 max-w-2xl w-full flex items-center justify-center gap-3 hover:bg-teal-900/90 text-white font-medium px-4 py-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed",
+      className={cn(" border border-gray-300 cursor-pointer max-w-2xl w-full flex items-center justify-center gap-3 hover:bg-teal-900/90 text-white font-medium px-4 py-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}
     >

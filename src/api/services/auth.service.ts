@@ -2,7 +2,6 @@ import type { User, ApiResponse } from "@/types/auth.types";
 import { apiClient } from "@/api/client";
 import { AxiosError } from "axios";
 
-
 export const authService = {
 
     getCurrentUser: async (): Promise<User | null> => {
