@@ -1,5 +1,10 @@
+import { DashboardStudentProfile } from '@/components/dashboard/student-profile';
+
 export const DashboardPage = () => {
+  
   return (
-    <div>Hello from dashboard page!</div>
+    <div className="max-w-full flex flex-col items-center justify-center">
+      <DashboardStudentProfile />
+    </div>
   )
 }

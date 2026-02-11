@@ -1,4 +1,4 @@
-import { cn } from "@/utils/utils"
+import { cn } from "@/lib/utils"
 import {
   Home,
   FileText,
@@ -10,6 +10,8 @@ import {
 import { Avatar } from "radix-ui";
 
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "react-router";
+import { buttonVariants } from "../ui/button";
 
 interface DashboardSidebarProps {
   collapsed: boolean
@@ -79,19 +81,19 @@ export const DashboardSidebar = ({
         <ul className="flex flex-col gap-2">
           {navItems.map((item) => (
             <li key={item.label}>
-              <a
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors no-underline",
-                  item.active
-                    ? "bg-teal-500 text-white"
-                    : "text-gray-500 hover:bg-teal-600 hover:text-white",
-                  collapsed ? "justify-center px-0" : "",
+              <Link
+                to={item.href}
+                className={buttonVariants({
+                  className: cn("w-full flex items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors no-underline",
+                      item.active
+                        ? "bg-teal-500 text-white"
+                        : "text-gray-500 hover:bg-teal-600 hover:text-white",
+                      collapsed ? "justify-center px-0" : ""), variant: 'secondary', size: 'lg'}
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

@@ -9,7 +9,7 @@ export const DashboardTopbar = () => {
   return (
      <header className="font-secondary sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 backdrop-blur-md lg:px-8">
       <div>
-        <h3 className="text-sm text-gray-500 text-start">
+        <h3 className="text-sm text-gray-600 text-start">
             Selamat datang kembali, <br />
             <span className=" text-teal-950 font-semibold">{user?.fullName.replace(/^\d+_/, "")}</span>
         </h3>

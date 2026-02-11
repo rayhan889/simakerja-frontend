@@ -1,7 +1,8 @@
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { DashboardTopbar } from "@/components/dashboard/topbar"
-import { cn } from "@/utils/utils"
+import { cn } from "@/lib/utils"
 import { useState } from "react"
+import { Outlet } from "react-router"
 
 export const DashboardLayout = () => {
 
@@ -21,9 +22,8 @@ export const DashboardLayout = () => {
       >
         <DashboardTopbar />
         <main className="flex-1 px-6 py-6 lg:px-8">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6">
-            {/* <StudentProfile />
-            <DocumentHistory /> */}
+          <div className="mx-auto flex max-w-7xl flex-col gap-6">
+           <Outlet />
           </div>
         </main>
       </div>
