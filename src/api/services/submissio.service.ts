@@ -88,7 +88,7 @@ export const submissionService = {
           ...data,
           moaIa: {
             ...data.moaIa,
-            student_snapshots: data.moaIa.studentSnapshots.map((snapshot) => ({
+            studentSnapshots: data.moaIa.studentSnapshots.map((snapshot) => ({
               ...snapshot,
               total: snapshot.students.length,
             }))

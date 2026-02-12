@@ -1,4 +1,5 @@
 import axios, {type InternalAxiosRequestConfig, AxiosError} from 'axios';
+import { toast } from 'sonner';
 
 export const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
@@ -27,6 +28,7 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
         if (error.response?.status === 401) {
+            toast.error("Session expired. Please log in again.")
             // Prevent redirect loop
             if (!window.location.pathname.includes('login')) {
 
@@ -35,6 +37,7 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response?.status === 403) {
+            toast.error("Access Denied: insufficient permissions to access this resource.")
             console.error("Access Denied: insufficient permissions to access this resource.");
         }
 

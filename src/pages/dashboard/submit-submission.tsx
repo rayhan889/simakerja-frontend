@@ -69,7 +69,7 @@ const moaIaDetailSchema = z.object({
         .min(1, "Posisi perwakilan mitra harus diisi")
         .max(255, "Posisi perwakilan mitra maksimal 255 karakter"),
     
-    documentActivity: z.enum(
+    activityType: z.enum(
         ['internship', 'study_independent', 'kkn', 'research', 'community_service'],
         { error: "Tipe aktivitas harus dipilih" }
     ),
@@ -106,7 +106,7 @@ const defaultValues: SubmissionFormValues = {
         facultyRepresentativeName: '',
         partnerRepresentativeName: '',
         partnerRepresentativePosition: '',
-        documentActivity: 'internship',
+        activityType: 'internship',
         studentSnapshots: [
         {
             studyProgram: '',
@@ -204,12 +204,11 @@ export const DashboardSubmitSubmissionPage = () => {
         name: "moaIa.studentSnapshots"
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { mutate: createSubmission, isPending } = useCreateSubmission();
 
     const onSubmit = (data: SubmissionFormValues) => {
-        console.log(data)
-        // createSubmission(data);
+        // console.log(data)
+        createSubmission(data);
     }
 
     const handleReset = () => {
@@ -233,7 +232,7 @@ export const DashboardSubmitSubmissionPage = () => {
             </h1>
         </div>
 
-        <div className="rounded-lg border border-teal-700 bg-teal-600/20 p-2 w-fit">
+        <div className="rounded-lg border border-teal-700 bg-teal-600/10 p-2 w-fit">
             <p className="font-secondary text-teal-950 text-sm text-start">
                 <b>Perhatian:</b> Lengkapi informasi umum dibawah ini beserta informasi detail terkait tipe dokumen yang dipilih!
             </p>
@@ -250,7 +249,7 @@ export const DashboardSubmitSubmissionPage = () => {
                         </h1>
                     </div>
 
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3 w-full'>
                         <FormField
                             control={form.control}
                             name='submissionType'
@@ -262,7 +261,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                             name={field.name}
                                             onValueChange={field.onChange}
                                             value={field.value}
-                                            disabled={field.disabled}
+                                            disabled
                                         >
                                             <SelectTrigger className="w-full" ref={field.ref}>
                                                 <SelectValue placeholder="MoA & IA" />
@@ -299,7 +298,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                             <SelectContent>
                                                 <SelectGroup>
                                                     <SelectLabel>Fakultas</SelectLabel>
-                                                    <SelectItem value="teknik">Teknik</SelectItem>
+                                                    <SelectItem value="Teknik">Teknik</SelectItem>
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>
@@ -313,8 +312,8 @@ export const DashboardSubmitSubmissionPage = () => {
                             control={form.control}
                             name='notes'
                             render={({ field }) => (
-                                <FormItem className='text-start flex flex-col space-y-2'>
-                                    <FormLabel className='md:col-span-1'>Catatan</FormLabel>
+                                <FormItem className='text-start flex flex-col col-span-2 space-y-2'>
+                                    <FormLabel>Catatan</FormLabel>
                                     <FormControl>
                                         <Input
                                             {...field}
@@ -461,7 +460,7 @@ export const DashboardSubmitSubmissionPage = () => {
 
                         <FormField
                             control={form.control}
-                            name="moaIa.documentActivity"
+                            name="moaIa.activityType"
                             render={({ field }) => (
                             <FormItem className='text-start flex flex-col space-y-2'>
                                 <FormLabel required>Tipe Aktivitas</FormLabel>
@@ -616,7 +615,7 @@ export const DashboardSubmitSubmissionPage = () => {
                             type="button"
                             variant="outline"
                             onClick={addStudentGroup}
-                            className="w-full border-dashed"
+                            className="w-full border-dashed cursor-pointer"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Tambah Grup Mahasiswa

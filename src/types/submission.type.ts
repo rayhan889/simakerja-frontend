@@ -4,9 +4,9 @@ export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 've
 
 export type MoAIASubmissionType = 'moa' | 'ia';
 
-export type DocumentActivity = 'internship' | 'study_independent' | 'kkn' | 'research' | 'community_service';
+export type ActivityType = 'internship' | 'study_independent' | 'kkn' | 'research' | 'community_service';
 
-export const activityLabels: Record<DocumentActivity, string> = {
+export const activityLabels: Record<ActivityType, string> = {
   internship: 'Magang',
   study_independent: 'Studi Independen',
   kkn: 'KKN',
@@ -38,7 +38,7 @@ export interface MoAIASubmission {
     partnerRepresentativeName: string;
     partnerRepresentativePosition: string;
     studentSnapshot: StudentSnapshot;
-    documentActivity: DocumentActivity;
+    activityType: ActivityType;
     documentType: MoAIASubmissionType;
 }
 
@@ -53,7 +53,7 @@ export interface SubmissionsByUserIdAndMoAIAType {
     partnerName: string;
     partnerNumber: string;
     status: SubmissionStatus;
-    activityType: DocumentActivity;
+    activityType: ActivityType;
     submissionDate: string;
     notes?: string;
 }
@@ -71,7 +71,7 @@ export interface MoAIADetailRequest {
     facultyRepresentativeName: string;
     partnerRepresentativeName: string;
     partnerRepresentativePosition: string;
-    documentActivity: DocumentActivity;
+    activityType: ActivityType;
     studentSnapshots: Array<StudentSnapshotRequest>;
 }
 

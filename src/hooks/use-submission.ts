@@ -3,6 +3,7 @@ import type { CreateMoAIASubmissionRequest } from "@/types/submission.type";
 import type { QueryParams } from "@/types/table.types";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
+import { toast } from "sonner"
 
 export const submissionKeys = {
     all: ["submissions"] as const,
@@ -88,11 +89,12 @@ export function useCreateSubmission() {
             queryClient.invalidateQueries({
                 queryKey: submissionKeys.all
             })
-            console.log("success creating submission")
             navigate('/dashboard/track-submission')
+            toast.success("Pengajuan berhasil dibuat.")
         },
 
         onError: (error) => {
+            toast.error("Gagal membuat pengajuan : " + error.message)
             console.log("error creating submission: " + error.message)
         }
     })

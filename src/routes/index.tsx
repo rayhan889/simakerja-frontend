@@ -33,11 +33,11 @@ const router = createBrowserRouter([
                 element: <DashboardPage />
             },
             {
-                path: "/track-submission",
+                path: "/dashboard/track-submission",
                 element: <DashboardTrackSubmissionPage />
             },
             {
-                path: "/submit-document",
+                path: "/dashboard/submit-submission",
                 element: <DashboardSubmitSubmissionPage />
             }
         ]

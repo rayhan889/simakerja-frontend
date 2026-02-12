@@ -1,4 +1,4 @@
-import type { DocumentActivity, SubmissionsByUserIdAndMoAIAType, SubmissionStatus } from "@/types/submission.type";
+import type { ActivityType, SubmissionsByUserIdAndMoAIAType, SubmissionStatus } from "@/types/submission.type";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "../ui/badge";
 import { Eye, MoreHorizontal } from "lucide-react";
@@ -33,7 +33,7 @@ export const submissionByUserIdAndMoATypeColumns: ColumnDef<SubmissionsByUserIdA
     submissionByUserIdAndMoATypeColumnHelper.accessor('activityType', {
         header: 'Bentuk Kerjasama',
         cell: (info) => {
-            const activity = info.getValue() as DocumentActivity;
+            const activity = info.getValue() as ActivityType;
             return (
                 <span className="text-gray-600">
                     {

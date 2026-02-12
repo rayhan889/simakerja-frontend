@@ -11,7 +11,6 @@ import { Avatar } from "radix-ui";
 
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "react-router";
-import { buttonVariants } from "@/components/ui/button";
 
 interface DashboardSidebarProps {
   collapsed: boolean
@@ -20,8 +19,8 @@ interface DashboardSidebarProps {
 
 const navItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
-  { icon: FileText, label: "Lacak Dokumen", href: "/track-submission", active: false },
-  { icon: Send, label: "Pengajuan Dokumen", href: "/submit-document", active: false },
+  { icon: FileText, label: "Lacak Dokumen", href: "/dashboard/track-submission", active: false },
+  { icon: Send, label: "Pengajuan Dokumen", href: "/dashboard/submit-submission", active: false },
 ]
 
 export const DashboardSidebar = ({
@@ -89,13 +88,13 @@ export const DashboardSidebar = ({
             <li key={item.label}>
               <Link
                 to={item.href}
-                className={buttonVariants({
-                  className: cn("w-full text-white flex items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors no-underline",
+                className={
+                  cn("w-full text-white flex items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors no-underline",
                       item.active
                         ? "bg-teal-500"
                         : " hover:bg-teal-600 ",
-                      collapsed ? "justify-center px-0" : ""), variant: 'secondary', size: 'lg'}
-                )}
+                      collapsed ? "justify-center px-0" : "")
+                }
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
