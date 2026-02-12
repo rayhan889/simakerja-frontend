@@ -1,6 +1,7 @@
 export type UserRole = 'student' | 'lecturer' | 'staff' | 'adhoc';
 
 export interface User {
+    id: string;
     sub: string;
     email: string;
     profilePicture: string;

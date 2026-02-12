@@ -4,16 +4,13 @@ import { LoginPage } from '@/pages/auth/login'
 import { ProtectedRoute } from '@/routes/guards/protected-route'
 import { DashboardLayout } from './layouts/dashboard-layout'
 import { DashboardPage } from '@/pages/dashboard'
-import { AuthLayout } from './layouts/auth-layout'
 
 const router = createBrowserRouter([
     {
         path: '/login',
         element: (
             <GuestRoute>
-                <AuthLayout>
-                    <LoginPage />
-                </AuthLayout>
+                <LoginPage />
             </GuestRoute>
         ),
     },
@@ -30,9 +27,9 @@ const router = createBrowserRouter([
                 element: <DashboardPage />
             },
             {
-                path: 'dashboard',
+                path: "/dashboard",
                 element: <DashboardPage />
-            }
+            },
         ]
     },
     {
