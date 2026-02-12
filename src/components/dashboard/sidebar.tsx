@@ -21,7 +21,7 @@ interface DashboardSidebarProps {
 const navItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
   { icon: FileText, label: "Lacak Dokumen", href: "/track-submission", active: false },
-  { icon: Send, label: "Pengajuan Dokumen", href: "#", active: false },
+  { icon: Send, label: "Pengajuan Dokumen", href: "/submit-document", active: false },
 ]
 
 export const DashboardSidebar = ({
@@ -37,7 +37,6 @@ export const DashboardSidebar = ({
     active: location.pathname === item.href
   }));
 
-  console.log(user?.profilePicture)
   return (
     <aside
       className={cn(

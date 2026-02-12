@@ -1,7 +1,7 @@
 import type { ApiResponse } from "@/types/auth.types";
 import { apiClient } from "@/api/client";
 import { AxiosError } from "axios";
-import type { MoAIASubmission, Submission, SubmissionsByUserIdAndMoAIAType } from "@/types/submission.type";
+import type { CreateMoAIASubmissionRequest, MoAIASubmission, Submission, SubmissionsByUserIdAndMoAIAType } from "@/types/submission.type";
 import type { PaginationResponese } from "@/types/pagination.type";
 import type { QueryParams } from "@/types/table.types";
 
@@ -78,5 +78,38 @@ export const submissionService = {
           }
           throw error
       }
+    },
+
+    createSubmission: async (
+      data: CreateMoAIASubmissionRequest
+    ): Promise<ApiResponse<Submission> | null> => {
+       try {
+        const payload = {
+          ...data,
+          moaIa: {
+            ...data.moaIa,
+            student_snapshots: data.moaIa.studentSnapshots.map((snapshot) => ({
+              ...snapshot,
+              total: snapshot.students.length,
+            }))
+          },
+        }
+
+         const response = await apiClient.post<ApiResponse<Submission>>(
+              '/submissions',
+              payload,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              }
+          )
+          return response.data
+       } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 401) {
+            return null;
+          }
+          throw error
+       }
     }
 }

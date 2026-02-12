@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/routes/guards/protected-route'
 import { DashboardLayout } from './layouts/dashboard-layout'
 import { DashboardPage } from '@/pages/dashboard'
 import { DashboardTrackSubmissionPage } from '@/pages/dashboard/track-submission'
+import { DashboardSubmitSubmissionPage } from '@/pages/dashboard/submit-submission'
 
 const router = createBrowserRouter([
     {
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
             {
                 path: "/track-submission",
                 element: <DashboardTrackSubmissionPage />
+            },
+            {
+                path: "/submit-document",
+                element: <DashboardSubmitSubmissionPage />
             }
         ]
     },

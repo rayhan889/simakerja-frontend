@@ -57,3 +57,35 @@ export interface SubmissionsByUserIdAndMoAIAType {
     submissionDate: string;
     notes?: string;
 }
+
+export interface StudentSnapshotRequest {
+    studyProgram: string;
+    students: Array<string>;
+    unit: string;
+}
+
+export interface MoAIADetailRequest {
+    documentType: MoAIASubmissionType;
+    partnerName: string;
+    partnerNumber: string;
+    facultyRepresentativeName: string;
+    partnerRepresentativeName: string;
+    partnerRepresentativePosition: string;
+    documentActivity: DocumentActivity;
+    studentSnapshots: Array<StudentSnapshotRequest>;
+}
+
+export interface CreateMoAIASubmissionRequest {
+    submissionType: SubmissionType;
+    notes?: string;
+    faculty: string;
+    moaIa: MoAIADetailRequest;
+}
+
+export const studyProgramOptions = [
+  { value: 'teknik_informatika', label: 'Teknik Informatika' },
+  { value: 'sistem_informasi', label: 'Sistem Informasi' },
+  { value: 'pendidikan_teknologi_informasi', label: 'Pendidikan Teknologi Informasi' },
+] as const;
+
+export type StudyProgram = typeof studyProgramOptions[number]['value'];
