@@ -1,12 +1,16 @@
-import { useMoaIASubmissions } from '@/hooks/use-submission'
+import { useSubmissionsByUserIdAndMoAIAType } from '@/hooks/use-submission'
 import { toSpringSort, type QueryParams } from '@/types/table.types'
 import type { PaginationState, SortingState } from '@tanstack/react-table'
 import { useCallback, useMemo, useState } from 'react'
 import { DataTable } from '../data-table/data-table'
-import { moaIASubmissionColumns } from '../submission/submission-columns'
 import { DataTableSearch } from '../data-table/data-table-search'
+import { useAuth } from '@/hooks/use-auth'
+import { submissionByUserIdAndMoATypeColumns } from '../submission/submissions-by-userid-and-moa-ia-type-column';
 
 export const DashboardSubmissionHistory = () => {
+
+  const { user } = useAuth();
+  const userId = user?.id || "";
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -30,7 +34,7 @@ export const DashboardSubmissionHistory = () => {
     isFetching,
     isError,
     error
-  } = useMoaIASubmissions(queryParams)
+  } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId);
 
   const tableData = data?.content ?? [];
   const totalItems = data?.totalElements ?? 0;
@@ -76,33 +80,17 @@ export const DashboardSubmissionHistory = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* ----- PAGE HEADER ----- */}
+    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Pengajuan MoA/IA
+            Riwayat Pengajuan MoA dan IA
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Daftar dokumen Memorandum of Agreement dan Implementation Agreement
-          </p>
         </div>
         
-        {/* Add New Button */}
-        <button
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary/90 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Ajukan Dokumen
-        </button>
       </div>
 
-      {/* ----- TABLE CONTROLS ----- */}
       <div className="flex items-center justify-between gap-4">
-        {/* Search Input */}
-        {/* ✅ This endpoint supports search, so we show the input */}
         <DataTableSearch
           value={search}
           onChange={handleSearchChange}
@@ -111,9 +99,7 @@ export const DashboardSubmissionHistory = () => {
           debounceMs={300}
         />
 
-        {/* Right side controls */}
         <div className="flex items-center gap-3">
-          {/* Fetching indicator (shows during refetch, not initial load) */}
           {isFetching && !isLoading && (
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <svg
@@ -139,32 +125,24 @@ export const DashboardSubmissionHistory = () => {
             </div>
           )}
           
-          {/* Optional: Filter dropdown could go here */}
         </div>
       </div>
 
-      {/* ----- DATA TABLE ----- */}
       <DataTable
-        // Column configuration
-        columns={moaIASubmissionColumns}
+        columns={submissionByUserIdAndMoATypeColumns}
         
-        // Data from API
         data={tableData}
         totalItems={totalItems}
         totalPages={totalPages}
         
-        // Pagination (controlled)
         pagination={pagination}
         onPaginationChange={setPagination}
         
-        // Sorting (controlled)
         sorting={sorting}
         onSortingChange={setSorting}
         
-        // Loading state
         isLoading={isLoading}
         
-        // Page size options
         pageSizeOptions={[10, 20, 50]}
       />
     </div>

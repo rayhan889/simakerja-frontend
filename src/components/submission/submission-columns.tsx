@@ -1,23 +1,10 @@
-import type { DocumentActivity, MoAIASubmission, Submission } from "@/types/submission.type";
+import { activityLabels, documentTypeLabels, type DocumentActivity, type MoAIASubmission, type Submission } from "@/types/submission.type";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Eye, MoreHorizontal } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const submissionColumnHelper = createColumnHelper<Submission>();
 const moaIaSubmissionColumnHelper = createColumnHelper<MoAIASubmission>();
-
-const activityLabels: Record<DocumentActivity, string> = {
-  internship: 'Magang',
-  study_independent: 'Studi Independen',
-  kkn: 'KKN',
-  research: 'Penelitian',
-  community_service: 'Pengabdian Masyarakat',
-};
-
-const documentTypeLabels: Record<string, string> = {
-  moa: 'MoA',
-  ia: 'IA',
-};
 
 // TODO: lengkapi kolom habis endpoint jadi
 // export const submissionColumns: ColumnDef<Submission, unknown>[] = [

@@ -46,5 +46,28 @@ export function useMoaIASubmissions(params: QueryParams) {
     })
 }
 
+export const submissionsByUserIdAndMoAIATypeKeys = {
+    all: ["submissions-by-userid-and-moa-ia-type"] as const,
+    lists: () => [...submissionsByUserIdAndMoAIATypeKeys.all, "list"] as const,
+    list: (params: QueryParams, userId: string) => [...submissionsByUserIdAndMoAIATypeKeys.lists(), { params, userId }] as const,
+}
+
+export function useSubmissionsByUserIdAndMoAIAType(params: QueryParams, userId: string) {
+    return useQuery({
+        queryKey: submissionsByUserIdAndMoAIATypeKeys.list(params, userId),
+
+        queryFn: () => submissionService.getSubmissionsByUserIdAndMoAIAType(params, userId),
+
+        placeholderData: keepPreviousData,
+
+        staleTime: 10 * 60 * 1000, // 10 minutes
+
+        refetchOnWindowFocus: false,
+
+        retry: 1,
+    })
+}
+
 export type SubmissionResult = ReturnType<typeof useSubmissions>;
 export type MoAIASubmissionResult = ReturnType<typeof useMoaIASubmissions>;
+export type SubmissionsByUserIdAndMoAIATypeResult = ReturnType<typeof useSubmissionsByUserIdAndMoAIAType>;

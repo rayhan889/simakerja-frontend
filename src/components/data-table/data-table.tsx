@@ -54,19 +54,15 @@ export function DataTable<TData, TValue>({
     })
 
     return (
-        <div className="space-y-4">
-        {/* ============ TABLE ============ */}
+        <div className="space-y-4 w-full">
         <div className="rounded-lg border border-gray-200 overflow-hidden">
             <table className="w-full text-sm">
             
-            {/* ----- TABLE HEADER ----- */}
             <thead className="bg-gray-50 border-b border-gray-200">
                 {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
-                    // Check if this column can be sorted
                     const canSort = header.column.getCanSort();
-                    // Check if currently sorted (false | 'asc' | 'desc')
                     const sorted = header.column.getIsSorted();
                     
                     return (
@@ -75,20 +71,16 @@ export function DataTable<TData, TValue>({
                         className={cn(
                             'px-4 py-3 text-left text-xs font-medium',
                             'text-gray-500 uppercase tracking-wider',
-                            // Make sortable columns clickable
                             canSort && 'cursor-pointer select-none hover:bg-gray-100'
                         )}
-                        // Toggle sort on click (if sortable)
                         onClick={header.column.getToggleSortingHandler()}
                         >
                         <div className="flex items-center gap-2">
-                            {/* Column header text */}
                             {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                             )}
                             
-                            {/* Sort indicator icon */}
                             {canSort && (
                             <span className="text-gray-400">
                                 {sorted === 'asc' ? (
@@ -108,10 +100,8 @@ export function DataTable<TData, TValue>({
                 ))}
             </thead>
             
-            {/* ----- TABLE BODY ----- */}
             <tbody className="divide-y divide-gray-200 bg-white">
                 {isLoading ? (
-                // LOADING STATE: Show skeleton rows
                 Array.from({ length: pagination.pageSize }).map((_, rowIdx) => (
                     <tr key={`skeleton-row-${rowIdx}`}>
                     {columns.map((_, colIdx) => (
@@ -122,7 +112,6 @@ export function DataTable<TData, TValue>({
                     </tr>
                 ))
                 ) : data.length === 0 ? (
-                // EMPTY STATE: No data found
                 <tr>
                     <td
                     colSpan={columns.length}
@@ -147,7 +136,6 @@ export function DataTable<TData, TValue>({
                     </td>
                 </tr>
                 ) : (
-                // DATA ROWS: Render actual data
                 table.getRowModel().rows.map((row) => (
                     <tr
                     key={row.id}
@@ -168,11 +156,8 @@ export function DataTable<TData, TValue>({
             </table>
         </div>
 
-        {/* ============ PAGINATION CONTROLS ============ */}
         <div className="flex items-center justify-between px-2">
             
-            {/* ----- INFO TEXT ----- */}
-            {/* "Showing 1-10 of 100 data" */}
             <p className="text-sm text-gray-500">
             Menampilkan{' '}
             <span className="font-medium">
@@ -191,7 +176,6 @@ export function DataTable<TData, TValue>({
 
             <div className="flex items-center gap-6">
             
-            {/* ----- PAGE SIZE SELECTOR ----- */}
             <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">Per halaman:</span>
                 <select
@@ -202,8 +186,6 @@ export function DataTable<TData, TValue>({
                 )}
                 value={pagination.pageSize}
                 onChange={(e) => {
-                    // When changing page size, reset to first page
-                    // (otherwise user might be on a page that doesn't exist)
                     onPaginationChange({
                     pageIndex: 0,
                     pageSize: Number(e.target.value),
@@ -218,9 +200,7 @@ export function DataTable<TData, TValue>({
                 </select>
             </div>
 
-            {/* ----- PAGE NAVIGATION ----- */}
             <div className="flex items-center gap-1">
-                {/* Previous button */}
                 <button
                 className={cn(
                     'rounded-md border border-gray-300 bg-white',
@@ -234,7 +214,6 @@ export function DataTable<TData, TValue>({
                 Sebelumnya
                 </button>
 
-                {/* Page numbers */}
                 <div className="flex items-center gap-1 mx-2">
                 {generatePageNumbers(pagination.pageIndex, totalPages).map(
                     (pageNum, idx) =>
@@ -261,14 +240,12 @@ export function DataTable<TData, TValue>({
                             })
                         }
                         >
-                        {/* Display 1-indexed to user (page 0 shows as "1") */}
                         {(pageNum as number) + 1}
                         </button>
                     )
                 )}
                 </div>
 
-                {/* Next button */}
                 <button
                 className={cn(
                     'rounded-md border border-gray-300 bg-white',
@@ -292,22 +269,18 @@ function generatePageNumbers(
   currentPage: number,
   totalPages: number
 ): (number | '...')[] {
-  // If 7 or fewer pages, show all
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, i) => i);
   }
 
   const pages: (number | '...')[] = [];
   
-  // Always show first page
   pages.push(0);
   
-  // Add ellipsis if current page is far from start
   if (currentPage > 2) {
     pages.push('...');
   }
   
-  // Show pages around current page
   for (
     let i = Math.max(1, currentPage - 1);
     i <= Math.min(totalPages - 2, currentPage + 1);
@@ -316,7 +289,6 @@ function generatePageNumbers(
     pages.push(i);
   }
   
-  // Add ellipsis if current page is far from end
   if (currentPage < totalPages - 3) {
     pages.push('...');
   }
