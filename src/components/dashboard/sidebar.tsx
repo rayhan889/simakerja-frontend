@@ -10,8 +10,8 @@ import {
 import { Avatar } from "radix-ui";
 
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "react-router";
-import { buttonVariants } from "../ui/button";
+import { Link, useLocation } from "react-router";
+import { buttonVariants } from "@/components/ui/button";
 
 interface DashboardSidebarProps {
   collapsed: boolean
@@ -19,8 +19,8 @@ interface DashboardSidebarProps {
 }
 
 const navItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard", active: true },
-  { icon: FileText, label: "Lacak Dokumen", href: "#", active: false },
+  { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
+  { icon: FileText, label: "Lacak Dokumen", href: "/track-submission", active: false },
   { icon: Send, label: "Pengajuan Dokumen", href: "#", active: false },
 ]
 
@@ -30,6 +30,13 @@ export const DashboardSidebar = ({
 }: DashboardSidebarProps) => {
 
   const { user } = useAuth();
+  const location = useLocation();
+
+  const updatedNavItems = navItems.map(item => ({
+    ...item,
+    active: location.pathname === item.href
+  }));
+
   console.log(user?.profilePicture)
   return (
     <aside
@@ -79,15 +86,15 @@ export const DashboardSidebar = ({
 
       <nav className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-2">
-          {navItems.map((item) => (
+          {updatedNavItems.map((item) => (
             <li key={item.label}>
               <Link
                 to={item.href}
                 className={buttonVariants({
-                  className: cn("w-full flex items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors no-underline",
+                  className: cn("w-full text-white flex items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors no-underline",
                       item.active
-                        ? "bg-teal-500 text-white"
-                        : "text-gray-500 hover:bg-teal-600 hover:text-white",
+                        ? "bg-teal-500"
+                        : " hover:bg-teal-600 ",
                       collapsed ? "justify-center px-0" : ""), variant: 'secondary', size: 'lg'}
                 )}
               >
