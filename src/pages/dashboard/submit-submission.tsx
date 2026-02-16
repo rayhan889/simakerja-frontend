@@ -1,5 +1,5 @@
-import { Info, BookText, X, User, Trash2, Plus, Loader2 } from 'lucide-react'
-import { useState } from 'react';
+import { Info, BookText, X, User, Trash2, Plus, Loader2, UploadCloud } from 'lucide-react'
+import { useCallback, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,12 @@ import { Input } from '@/components/ui/input';
 import { activityLabels, documentTypeLabels, studyProgramOptions } from '@/types/submission.type';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useUploadPartnerLogo } from '@/hooks/use-file-upload';
+import { useDropzone } from 'react-dropzone'
+import { toast } from 'sonner';
+
+const FACULTY_OF_TECHNOLOGY = 'Teknik';
+const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
 
 const studentSnapshotSchema = z.object({
     studyProgram: z
@@ -53,6 +59,12 @@ const moaIaDetailSchema = z.object({
         .string({ error: "Nomor mitra harus diisi" })
         .min(1, "Nomor mitra harus diisi")
         .max(50, "Nomor mitra maksimal 50 karakter"),
+
+    partnerAddress: z.string({ error: "Alamat mitra harus diisi" })
+        .min(1, "Alamat mitra harus diisi")
+        .max(500, "Alamat mitra maksimal 500 karakter"),
+
+    partnerLogoKey: z.string({ error: "Logo mitra harus diunggah" }).min(1, "Logo mitra harus diunggah"),
     
     facultyRepresentativeName: z
         .string({ error: "Nama perwakilan fakultas harus diisi" })
@@ -76,7 +88,35 @@ const moaIaDetailSchema = z.object({
     
     studentSnapshots: z
         .array(studentSnapshotSchema)
-        .min(1, "Minimal 1 grup mahasiswa harus ditambahkan"),
+        .min(1, "Minimal 1 grup mahasiswa harus ditambahkan")
+        .superRefine((snapshots, ctx) => {
+            const seenCombinations = new Set<string>();
+            const duplicateIndices: number[] = [];
+            
+            for (let i = 0; i < snapshots.length; i++) {
+                const snapshot = snapshots[i];
+                
+                if (!snapshot.studyProgram || !snapshot.unit) {
+                    continue;
+                }
+                
+                const compositeKey = `${snapshot.studyProgram}|${snapshot.unit}`;
+                
+                if (seenCombinations.has(compositeKey)) {
+                    duplicateIndices.push(i);
+                } else {
+                    seenCombinations.add(compositeKey);
+                }
+            }
+            
+            if (duplicateIndices.length > 0) {
+                ctx.addIssue({
+                    code: 'custom',
+                    message: "Kombinasi Program Studi dan Unit/Departemen tidak boleh sama antar grup mahasiswa. Setiap grup harus memiliki kombinasi yang unik.",
+                    path: [],
+                });
+            }
+        }),
 });
 
 const submissionFormSchema = z.object({
@@ -88,9 +128,11 @@ const submissionFormSchema = z.object({
         .optional()
         .or(z.literal('')),
     
-    faculty: z.literal('Teknik'),
+    faculty: z.literal(FACULTY_OF_TECHNOLOGY),
     
     moaIa: moaIaDetailSchema,
+
+    facultyAddress: z.literal(FACULTY_OF_TECHNOLOGY_ADDRESS),
 });
 
 type SubmissionFormValues = z.infer<typeof submissionFormSchema>;
@@ -98,11 +140,14 @@ type SubmissionFormValues = z.infer<typeof submissionFormSchema>;
 const defaultValues: SubmissionFormValues = {
     submissionType: 'moa_ia',
     notes: '',
-    faculty: 'Teknik',
+    faculty: FACULTY_OF_TECHNOLOGY,
+    facultyAddress: FACULTY_OF_TECHNOLOGY_ADDRESS,
     moaIa: {
         documentType: 'moa',
         partnerName: '',
         partnerNumber: '',
+        partnerAddress: '',
+        partnerLogoKey: '',
         facultyRepresentativeName: '',
         partnerRepresentativeName: '',
         partnerRepresentativePosition: '',
@@ -113,7 +158,7 @@ const defaultValues: SubmissionFormValues = {
             students: [],
             unit: '',
         },
-        ],
+    ],
     },
 };
 
@@ -154,7 +199,7 @@ function StudentTagInput({
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg border border-gray-300 bg-white">
+      <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg border border-gray-200 bg-white">
         {value.map((student, index) => (
           <span
             key={index}
@@ -204,15 +249,56 @@ export const DashboardSubmitSubmissionPage = () => {
         name: "moaIa.studentSnapshots"
     });
 
+    const [partnerLogoPreviewUrl, setPartnerLogoPreviewUrl] = useState<string | null>(null);
+
     const { mutate: createSubmission, isPending } = useCreateSubmission();
 
+    const { mutate: uploadPartnerLogo, isPending: isUploadingPartnerLogo } = useUploadPartnerLogo();
+
+    const onUploadPartnerLogo = useCallback(async (file: File) => {
+        uploadPartnerLogo(file, {
+            onSuccess: (response) => {
+                if (response) {
+                    setPartnerLogoPreviewUrl(response.previewUrl);
+                    form.setValue('moaIa.partnerLogoKey', response.objectKey, { shouldDirty: true });
+                }
+            },
+            onError: (error) => {
+                setPartnerLogoPreviewUrl(null);
+                form.setValue('moaIa.partnerLogoKey', '', { shouldDirty: true });
+                toast.error("Gagal mengunggah logo")
+                console.log("error uploading partner logo: " + error.message)
+            }
+        })
+    }, [uploadPartnerLogo, form]);
+
+    const onDropPartnerLogo = useCallback((acceptedFiles: File[]) => {
+        if (acceptedFiles.length > 0) {
+            const file = acceptedFiles[0];
+            onUploadPartnerLogo(file);
+        }
+    }, [onUploadPartnerLogo]);
+
+    const { getRootProps, getInputProps, isDragActive, fileRejections } = 
+        useDropzone({ 
+            onDrop: onDropPartnerLogo, 
+            accept: { 'image/*': ['.jpg', '.png', '.jpeg'] },
+            maxFiles: 1,
+            maxSize: 10 * 1024 * 1024, // 10MB
+        });
+
+    const removePartnerLogo = () => {
+        setPartnerLogoPreviewUrl(null);
+        form.setValue('moaIa.partnerLogoKey', '', { shouldDirty: true });
+    }
+
     const onSubmit = (data: SubmissionFormValues) => {
-        // console.log(data)
         createSubmission(data);
     }
 
     const handleReset = () => {
         form.reset(defaultValues);
+        setPartnerLogoPreviewUrl(null);
     }
 
     const addStudentGroup = () => {
@@ -249,7 +335,7 @@ export const DashboardSubmitSubmissionPage = () => {
                         </h1>
                     </div>
 
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3 w-full'>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
                         <FormField
                             control={form.control}
                             name='submissionType'
@@ -298,7 +384,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                             <SelectContent>
                                                 <SelectGroup>
                                                     <SelectLabel>Fakultas</SelectLabel>
-                                                    <SelectItem value="Teknik">Teknik</SelectItem>
+                                                    <SelectItem value={FACULTY_OF_TECHNOLOGY}>{FACULTY_OF_TECHNOLOGY}</SelectItem>
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>
@@ -310,9 +396,27 @@ export const DashboardSubmitSubmissionPage = () => {
 
                         <FormField
                             control={form.control}
+                            name="facultyAddress"
+                            render={({ field }) => (
+                            <FormItem className='text-start flex flex-col space-y-2'>
+                                <FormLabel required>Alamat Fakultas</FormLabel>
+                                <FormControl>
+                                <Input
+                                    {...field}
+                                    disabled
+                                    placeholder={FACULTY_OF_TECHNOLOGY_ADDRESS}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
                             name='notes'
                             render={({ field }) => (
-                                <FormItem className='text-start flex flex-col col-span-2 space-y-2'>
+                                <FormItem className='text-start flex flex-col col-span-3 space-y-2'>
                                     <FormLabel>Catatan</FormLabel>
                                     <FormControl>
                                         <Input
@@ -341,12 +445,13 @@ export const DashboardSubmitSubmissionPage = () => {
                         </div>
                     </div>
 
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
+                    <div className='w-full flex flex-col gap-3'>
+                        <div className='grid grid-cols-1 md:grid-cols-4 gap-3 w-full'>
                         <FormField
                             control={form.control}
                             name='moaIa.documentType'
                             render={({field}) => (
-                                <FormItem className='text-start flex flex-col space-y-2'>
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-2'>
                                     <FormLabel required>Jenis Dokumen</FormLabel>
                                     <FormControl>
                                         <Select
@@ -375,6 +480,25 @@ export const DashboardSubmitSubmissionPage = () => {
 
                         <FormField
                             control={form.control}
+                            name="moaIa.facultyRepresentativeName"
+                            render={({ field }) => (
+                            <FormItem className='text-start flex flex-col space-y-2 col-span-2'>
+                                <FormLabel required>Nama Perwakilan Fakultas</FormLabel>
+                                <FormControl>
+                                <Input
+                                    {...field}
+                                    placeholder="Prof. Dr. Tony Stark S.Pd M.Pd"
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
+                        <FormField
+                            control={form.control}
                             name="moaIa.partnerName"
                             render={({ field }) => (
                             <FormItem className='text-start flex flex-col space-y-2'>
@@ -392,14 +516,14 @@ export const DashboardSubmitSubmissionPage = () => {
 
                         <FormField
                             control={form.control}
-                            name="moaIa.partnerNumber"
+                            name="moaIa.partnerAddress"
                             render={({ field }) => (
                             <FormItem className='text-start flex flex-col space-y-2'>
-                                <FormLabel required>Nomor Mitra</FormLabel>
+                                <FormLabel required>Alamat Mitra</FormLabel>
                                 <FormControl>
                                 <Input
                                     {...field}
-                                    placeholder="1234567890"
+                                    placeholder="Jl. Jend. Gatot Subroto Kav. 52, Jakarta Selatan"
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -409,14 +533,14 @@ export const DashboardSubmitSubmissionPage = () => {
 
                         <FormField
                             control={form.control}
-                            name="moaIa.facultyRepresentativeName"
+                            name="moaIa.partnerNumber"
                             render={({ field }) => (
                             <FormItem className='text-start flex flex-col space-y-2'>
-                                <FormLabel required>Nama Perwakilan Fakultas</FormLabel>
+                                <FormLabel required>Nomor Mitra</FormLabel>
                                 <FormControl>
                                 <Input
                                     {...field}
-                                    placeholder="Prof. Dr. Tony Stark S.Pd M.Pd"
+                                    placeholder="1234567890"
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -490,7 +614,72 @@ export const DashboardSubmitSubmissionPage = () => {
                             )}
                         />
 
+                        <FormField
+                            control={form.control}
+                            name="moaIa.partnerLogoKey"
+                            render={() => (
+                            <FormItem className='text-start flex flex-col space-y-2 col-span-3'>
+                                <FormLabel required>Logo Mitra</FormLabel>
+                                {partnerLogoPreviewUrl ? (
+                                    <div className='w-full border border-gray-200 max-h-60 overflow-hidden relative rounded-md bg-transparent p-3'>
+
+                                        <Button
+                                            variant='ghost' 
+                                            size='icon' 
+                                            className='absolute top-2 cursor-pointer right-2 z-50 text-red-500 hover:text-red-700 hover:bg-red-50' 
+                                                onClick={() => { removePartnerLogo(); }}
+                                        >
+                                            <Trash2 />
+                                        </Button>
+
+                                        <img src={partnerLogoPreviewUrl} alt="Partner Logo Preview" className="w-full h-full object-contain" />
+                                    </div>
+                                ) : (
+                                    <>
+                                     <FormControl>
+                                        <div 
+                                            {...getRootProps()}
+                                            className={`flex max-h-80 
+                                                ${isDragActive ? 'bg-blue-50 border-blue-500' : ''} 
+                                                ${partnerLogoPreviewUrl ? 'border-none' : 'border-gray-200 h-40'}
+                                                w-full cursor-pointer items-center justify-center space-x-2 overflow-y-hidden rounded-md border border-dashed bg-transparent text-sm`
+                                            }
+                                        >
+                                            {isUploadingPartnerLogo ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" />
+                                                    <span>Mengunggah...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <UploadCloud className='h-5 w-5 text-gray-500' />
+                                                    {
+                                                        isDragActive ? (
+                                                            <p className="text-sm text-gray-500">Lepaskan file di sini</p>
+                                                        ) : (
+                                                            <p className="text-sm text-gray-500">Tarik dan lepaskan file atau klik untuk memilih file</p>
+                                                        )
+                                                    }
+                                                </>
+                                            )}
+                                            <Input {...getInputProps()} type='file' />
+                                        </div>
+                                    </FormControl>
+                                    </>
+                                )}
+                                <FormMessage>
+                                    {fileRejections.length !== 0 && (
+                                        <span className="text-sm text-red-500">
+                                            {fileRejections[0].errors[0].code === 'file-too-large' && 'File terlalu besar. Maksimal 10MB.'}
+                                            {fileRejections[0].errors[0].code === 'file-invalid-type' && 'Tipe file tidak valid. Hanya gambar (.jpg, .png, .jpeg) yang diperbolehkan.'}
+                                        </span>
+                                    )}
+                                </FormMessage>
+                            </FormItem>
+                            )}
+                        />
                     </div>
+                </div>
                 </div>
 
                 {/* student data */}
@@ -522,12 +711,11 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="sm"
+                                    size="icon"
                                     onClick={() => remove(index)}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
                                 >
-                                    <Trash2 className="h-4 w-4 mr-1" />
-                                    Hapus
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                                 )}
                             </div>

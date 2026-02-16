@@ -131,7 +131,7 @@ export const DashboardTrackSubmissionPage = () => {
           </div>
 
           <Link
-            to='/dashboard/submit-document'
+            to='/dashboard/submit-submission'
             className={
               cn(buttonVariants({ size: 'lg' }), 'cursor-pointer bg-teal-950 text-white flex items-center hover:bg-teal-800 font-secondary')}
           >

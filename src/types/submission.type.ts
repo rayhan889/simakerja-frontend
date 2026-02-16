@@ -56,6 +56,7 @@ export interface SubmissionsByUserIdAndMoAIAType {
     activityType: ActivityType;
     submissionDate: string;
     notes?: string;
+    documentType: MoAIASubmissionType;
 }
 
 export interface StudentSnapshotRequest {
@@ -67,6 +68,8 @@ export interface StudentSnapshotRequest {
 export interface MoAIADetailRequest {
     documentType: MoAIASubmissionType;
     partnerName: string;
+    partnerAddress: string;
+    partnerLogoKey: string;
     partnerNumber: string;
     facultyRepresentativeName: string;
     partnerRepresentativeName: string;
@@ -79,6 +82,7 @@ export interface CreateMoAIASubmissionRequest {
     submissionType: SubmissionType;
     notes?: string;
     faculty: string;
+    facultyAddress: string;
     moaIa: MoAIADetailRequest;
 }
 
