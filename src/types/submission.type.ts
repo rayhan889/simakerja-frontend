@@ -86,6 +86,17 @@ export interface CreateMoAIASubmissionRequest {
     moaIa: MoAIADetailRequest;
 }
 
+export interface PartnerAndFacultyProfile {
+    partnerName: string
+    partnerAddress: string
+    partnerNumber: string
+    partnerRepresentativeName: string
+    partnerRepresentativePosition: string
+    activityType: ActivityType
+    partnerLogoKey: string
+    facultyRepresentativeName: string
+}
+
 export const studyProgramOptions = [
   { value: 'teknik_informatika', label: 'Teknik Informatika' },
   { value: 'sistem_informasi', label: 'Sistem Informasi' },

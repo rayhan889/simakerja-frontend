@@ -1,9 +1,9 @@
 import { Info, BookText, X, User, Trash2, Plus, Loader2, UploadCloud } from 'lucide-react'
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCreateSubmission } from '@/hooks/use-submission';
+import { useCreateSubmission, usePartners } from '@/hooks/use-submission';
 import {
   Form,
   FormField,
@@ -22,12 +22,22 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from '@/components/ui/input';
-import { activityLabels, documentTypeLabels, studyProgramOptions } from '@/types/submission.type';
+import { activityLabels, documentTypeLabels, studyProgramOptions, type PartnerAndFacultyProfile } from '@/types/submission.type';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useUploadPartnerLogo } from '@/hooks/use-file-upload';
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner';
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { trigramSimilarity } from '@/lib/trigram';
 
 const FACULTY_OF_TECHNOLOGY = 'Teknik';
 const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
@@ -251,9 +261,91 @@ export const DashboardSubmitSubmissionPage = () => {
 
     const [partnerLogoPreviewUrl, setPartnerLogoPreviewUrl] = useState<string | null>(null);
 
+    const [partnerMode, setPartnerMode] = useState<'existing' | 'new'>('existing');
+
+    const [selectedPartner, setSelectedPartner] = useState<PartnerAndFacultyProfile | null>(null);
+
+    const isPartnerFieldDisabled = partnerMode === 'existing' || selectedPartner !== null;
+
     const { mutate: createSubmission, isPending } = useCreateSubmission();
 
     const { mutate: uploadPartnerLogo, isPending: isUploadingPartnerLogo } = useUploadPartnerLogo();
+    
+    const {
+        data: partners,
+        isLoading: isLoadingPartners,
+        error: errorPartners,
+    } = usePartners();
+
+    const formPartnerName = form.watch('moaIa.partnerName');
+    const formPartnerNumber = form.watch('moaIa.partnerNumber');
+    useEffect(() => {
+      
+
+        if (partnerMode !== 'new' || !formPartnerName || !formPartnerNumber) {
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+             partners?.data.forEach(partner => {
+
+                const partnerNameSimilaryPoint = trigramSimilarity(partner.partnerName, formPartnerName);
+                console.log('similary point: ' + partnerNameSimilaryPoint)
+                if (partnerNameSimilaryPoint > 0.6 && partner.partnerNumber === formPartnerNumber) {
+                    toast.error(`
+                        Profil mitra yang Anda masukkan mirip dengan mitra yang sudah ada: 
+                        "${partner.partnerName}". Jika ini adalah mitra baru, 
+                        silakan gunakan nama & nomor yang berbeda untuk menghindari duplikasi.
+                    `, {
+                        duration: 10000,
+                    })
+                    return;
+                }
+            });
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [partnerMode, formPartnerName, formPartnerNumber, partners])
+    
+
+    const handlePartnerSelect = useCallback((partnerName: string) => {
+        const partner = partners?.data.find(p => p.partnerName === partnerName) || null;
+
+        if (!partner) {
+            setSelectedPartner(null);
+            return;
+        }
+
+        setSelectedPartner(partner);
+
+        form.setValue('moaIa.partnerName', partner.partnerName, { shouldDirty: true });
+        form.setValue('moaIa.partnerAddress', partner.partnerAddress, { shouldDirty: true });
+        form.setValue('moaIa.partnerNumber', partner.partnerNumber, { shouldDirty: true });
+        form.setValue('moaIa.partnerRepresentativeName', partner.partnerRepresentativeName, { shouldDirty: true });
+        form.setValue('moaIa.partnerRepresentativePosition', partner.partnerRepresentativePosition, { shouldDirty: true });
+        form.setValue('moaIa.activityType', partner.activityType, { shouldDirty: true });
+        form.setValue('moaIa.partnerLogoKey', partner.partnerLogoKey, { shouldDirty: true });
+        form.setValue('moaIa.facultyRepresentativeName', partner.facultyRepresentativeName, { shouldDirty: true });
+
+        setPartnerLogoPreviewUrl(null);
+    }, [partners, form])
+
+    const handlePartnerModeChange = useCallback((mode: 'existing' | 'new') => {
+        setPartnerMode(mode);
+
+        form.setValue('moaIa.partnerName', '', { shouldDirty: true });
+        form.setValue('moaIa.partnerAddress', '', { shouldDirty: true });
+        form.setValue('moaIa.partnerNumber', '', { shouldDirty: true });
+        form.setValue('moaIa.partnerRepresentativeName', '', { shouldDirty: true });
+        form.setValue('moaIa.partnerRepresentativePosition', '', { shouldDirty: true });
+        form.setValue('moaIa.activityType', 'internship', { shouldDirty: true });
+        form.setValue('moaIa.partnerLogoKey', '', { shouldDirty: true });
+        form.setValue('moaIa.facultyRepresentativeName', '', { shouldDirty: true });
+
+        setSelectedPartner(null);
+
+        setPartnerLogoPreviewUrl(null);
+    }, [form])
 
     const onUploadPartnerLogo = useCallback(async (file: File) => {
         uploadPartnerLogo(file, {
@@ -299,6 +391,9 @@ export const DashboardSubmitSubmissionPage = () => {
     const handleReset = () => {
         form.reset(defaultValues);
         setPartnerLogoPreviewUrl(null);
+
+        setPartnerMode('existing');
+        setSelectedPartner(null);
     }
 
     const addStudentGroup = () => {
@@ -318,9 +413,9 @@ export const DashboardSubmitSubmissionPage = () => {
             </h1>
         </div>
 
-        <div className="rounded-lg border border-teal-700 bg-teal-600/10 p-2 w-fit">
-            <p className="font-secondary text-teal-950 text-sm text-start">
-                <b>Perhatian:</b> Lengkapi informasi umum dibawah ini beserta informasi detail terkait tipe dokumen yang dipilih!
+        <div className="rounded-lg border border-teal-200 bg-teal-50 p-2 w-fit">
+            <p className="font-secondary text-teal-800 text-sm text-start">
+                <span className='font-medium'>Perhatian:</span> Lengkapi informasi umum dibawah ini beserta informasi detail terkait tipe dokumen yang dipilih!
             </p>
         </div>
 
@@ -445,68 +540,121 @@ export const DashboardSubmitSubmissionPage = () => {
                         </div>
                     </div>
 
+                    <div className="flex flex-col gap-2 w-full">
+                        <SegmentedControl
+                            value={partnerMode}
+                            onChange={handlePartnerModeChange}
+                            options={[
+                                { value: 'existing', label: 'Pilih Mitra Yang Ada' },
+                                { value: 'new', label: 'Buat Mitra Baru' },
+                            ]}
+                        />
+                        <p className="text-xs text-gray-500 ">
+                            {partnerMode === 'existing' 
+                                ? 'Pilih mitra dari daftar yang sudah tersedia. Data akan terisi otomatis.'
+                                : 'Isi data mitra baru secara manual.'}
+                        </p>
+                    </div>
+
                     <div className='w-full flex flex-col gap-3'>
                         <div className='grid grid-cols-1 md:grid-cols-4 gap-3 w-full'>
-                        <FormField
-                            control={form.control}
-                            name='moaIa.documentType'
-                            render={({field}) => (
-                                <FormItem className='text-start flex flex-col space-y-2 col-span-2'>
-                                    <FormLabel required>Jenis Dokumen</FormLabel>
-                                    <FormControl>
-                                        <Select
-                                            name={field.name}
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                        >
-                                            <SelectTrigger className="w-full" ref={field.ref}>
-                                                <SelectValue placeholder="Pilih Jenis Dokumen" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    <SelectLabel>Jenis Dokumen</SelectLabel>
-                                                    {Object.entries(documentTypeLabels).map(([value, label]) => (
-                                                        <SelectItem key={value} value={value}>
-                                                            {label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+                                <FormField
+                                    control={form.control}
+                                    name='moaIa.documentType'
+                                    render={({field}) => (
+                                        <FormItem className='text-start flex flex-col space-y-2 col-span-4'>
+                                            <FormLabel required>Jenis Dokumen</FormLabel>
+                                            <FormControl>
+                                                <Select
+                                                    name={field.name}
+                                                    onValueChange={field.onChange}
+                                                    value={field.value}
+                                                >
+                                                    <SelectTrigger className="w-full" ref={field.ref}>
+                                                        <SelectValue placeholder="Pilih Jenis Dokumen" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            <SelectLabel>Jenis Dokumen</SelectLabel>
+                                                            {Object.entries(documentTypeLabels).map(([value, label]) => (
+                                                                <SelectItem key={value} value={value}>
+                                                                    {label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="moaIa.partnerName"
+                                    render={({ field }) => (
+                                    <FormItem className='text-start flex flex-col space-y-2 col-span-4'>
+                                        <FormLabel required>Nama Mitra</FormLabel>
+                                        <FormControl>
+                                            {partnerMode === 'existing' ? (
+                                                <Combobox
+                                                    value={field.value}
+                                                    onValueChange={(value) => {
+                                                        field.onChange(value);
+                                                        if (value) {
+                                                            handlePartnerSelect(value);
+                                                        } else {
+                                                            setSelectedPartner(null);
+                                                        }
+                                                    }}
+                                                    items={partners?.data.map(partner => partner.partnerName) ?? []}
+                                                >
+                                                    <ComboboxInput 
+                                                        placeholder={isLoadingPartners ? "Memuat mitra..." : "Pilih Mitra"}
+                                                        disabled={isLoadingPartners}
+                                                        showClear
+                                                    />
+                                                    <ComboboxContent>
+                                                        <ComboboxEmpty>
+                                                            {errorPartners 
+                                                                ? "Gagal memuat daftar mitra." 
+                                                                : "Mitra tidak ditemukan."}
+                                                        </ComboboxEmpty>
+                                                        <ComboboxList>
+                                                            {(item) => (
+                                                                <ComboboxItem key={item} value={item}>
+                                                                    {item}
+                                                                </ComboboxItem>
+                                                            )}
+                                                        </ComboboxList>
+                                                    </ComboboxContent>
+                                                </Combobox>
+                                            ) : (
+                                                <Input
+                                                    {...field}
+                                                    placeholder="PT Telkom Indonesia"
+                                                />
+                                            )}
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                        </div>
+
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
 
                         <FormField
                             control={form.control}
                             name="moaIa.facultyRepresentativeName"
                             render={({ field }) => (
-                            <FormItem className='text-start flex flex-col space-y-2 col-span-2'>
+                            <FormItem className='text-start flex flex-col space-y-2'>
                                 <FormLabel required>Nama Perwakilan Fakultas</FormLabel>
                                 <FormControl>
                                 <Input
                                     {...field}
                                     placeholder="Prof. Dr. Tony Stark S.Pd M.Pd"
-                                />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                    </div>
-
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
-                        <FormField
-                            control={form.control}
-                            name="moaIa.partnerName"
-                            render={({ field }) => (
-                            <FormItem className='text-start flex flex-col space-y-2'>
-                                <FormLabel required>Nama Mitra</FormLabel>
-                                <FormControl>
-                                <Input
-                                    {...field}
-                                    placeholder="PT Telkom Indonesia"
+                                    disabled={isPartnerFieldDisabled}
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -524,6 +672,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <Input
                                     {...field}
                                     placeholder="Jl. Jend. Gatot Subroto Kav. 52, Jakarta Selatan"
+                                    disabled={isPartnerFieldDisabled}
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -541,6 +690,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <Input
                                     {...field}
                                     placeholder="1234567890"
+                                    disabled={isPartnerFieldDisabled}
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -558,6 +708,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <Input
                                     {...field}
                                     placeholder="Steve Rogers"
+                                    disabled={isPartnerFieldDisabled}
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -575,6 +726,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <Input
                                     {...field}
                                     placeholder="CTO (Chief Technology Officer)"
+                                    disabled={isPartnerFieldDisabled}
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -593,6 +745,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                         name={field.name}
                                         onValueChange={field.onChange}
                                         value={field.value}
+                                        disabled={isPartnerFieldDisabled}
                                     >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Pilih Tipe Aktivitas" />
@@ -614,70 +767,80 @@ export const DashboardSubmitSubmissionPage = () => {
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="moaIa.partnerLogoKey"
-                            render={() => (
-                            <FormItem className='text-start flex flex-col space-y-2 col-span-3'>
-                                <FormLabel required>Logo Mitra</FormLabel>
-                                {partnerLogoPreviewUrl ? (
-                                    <div className='w-full border border-gray-200 max-h-60 overflow-hidden relative rounded-md bg-transparent p-3'>
+                        {partnerMode === 'new' && (
+                            <FormField
+                                control={form.control}
+                                name="moaIa.partnerLogoKey"
+                                render={() => (
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-3'>
+                                    <FormLabel required>Logo Mitra</FormLabel>
+                                    {partnerLogoPreviewUrl ? (
+                                        <div className='w-full border border-gray-200 max-h-60 overflow-hidden relative rounded-md bg-transparent p-3'>
 
-                                        <Button
-                                            variant='ghost' 
-                                            size='icon' 
-                                            className='absolute top-2 cursor-pointer right-2 z-50 text-red-500 hover:text-red-700 hover:bg-red-50' 
-                                                onClick={() => { removePartnerLogo(); }}
-                                        >
-                                            <Trash2 />
-                                        </Button>
+                                            <Button
+                                                variant='ghost' 
+                                                size='icon' 
+                                                className='absolute top-2 cursor-pointer right-2 z-50 text-red-500 hover:text-red-700 hover:bg-red-50' 
+                                                    onClick={() => { removePartnerLogo(); }}
+                                            >
+                                                <Trash2 />
+                                            </Button>
 
-                                        <img src={partnerLogoPreviewUrl} alt="Partner Logo Preview" className="w-full h-full object-contain" />
-                                    </div>
-                                ) : (
-                                    <>
-                                     <FormControl>
-                                        <div 
-                                            {...getRootProps()}
-                                            className={`flex max-h-80 
-                                                ${isDragActive ? 'bg-blue-50 border-blue-500' : ''} 
-                                                ${partnerLogoPreviewUrl ? 'border-none' : 'border-gray-200 h-40'}
-                                                w-full cursor-pointer items-center justify-center space-x-2 overflow-y-hidden rounded-md border border-dashed bg-transparent text-sm`
-                                            }
-                                        >
-                                            {isUploadingPartnerLogo ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" />
-                                                    <span>Mengunggah...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <UploadCloud className='h-5 w-5 text-gray-500' />
-                                                    {
-                                                        isDragActive ? (
-                                                            <p className="text-sm text-gray-500">Lepaskan file di sini</p>
-                                                        ) : (
-                                                            <p className="text-sm text-gray-500">Tarik dan lepaskan file atau klik untuk memilih file</p>
-                                                        )
-                                                    }
-                                                </>
-                                            )}
-                                            <Input {...getInputProps()} type='file' />
+                                            <img src={partnerLogoPreviewUrl} alt="Partner Logo Preview" className="w-full h-full object-contain" />
                                         </div>
-                                    </FormControl>
-                                    </>
-                                )}
-                                <FormMessage>
-                                    {fileRejections.length !== 0 && (
-                                        <span className="text-sm text-red-500">
-                                            {fileRejections[0].errors[0].code === 'file-too-large' && 'File terlalu besar. Maksimal 10MB.'}
-                                            {fileRejections[0].errors[0].code === 'file-invalid-type' && 'Tipe file tidak valid. Hanya gambar (.jpg, .png, .jpeg) yang diperbolehkan.'}
-                                        </span>
+                                    ) : (
+                                        <>
+                                        <FormControl>
+                                            <div 
+                                                {...getRootProps()}
+                                                className={`flex max-h-80 
+                                                    ${isDragActive ? 'bg-blue-50 border-blue-500' : ''} 
+                                                    ${partnerLogoPreviewUrl ? 'border-none' : 'border-gray-200 h-40'}
+                                                    w-full cursor-pointer items-center justify-center space-x-2 overflow-y-hidden rounded-md border border-dashed bg-transparent text-sm`
+                                                }
+                                            >
+                                                {isUploadingPartnerLogo ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" />
+                                                        <span>Mengunggah...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <UploadCloud className='h-5 w-5 text-gray-500' />
+                                                        {
+                                                            isDragActive ? (
+                                                                <p className="text-sm text-gray-500">Lepaskan file di sini</p>
+                                                            ) : (
+                                                                <p className="text-sm text-gray-500">Tarik dan lepaskan file atau klik untuk memilih file</p>
+                                                            )
+                                                        }
+                                                    </>
+                                                )}
+                                                <Input {...getInputProps()} type='file' />
+                                            </div>
+                                        </FormControl>
+                                        </>
                                     )}
-                                </FormMessage>
-                            </FormItem>
-                            )}
-                        />
+                                    <FormMessage>
+                                        {fileRejections.length !== 0 && (
+                                            <span className="text-sm text-red-500">
+                                                {fileRejections[0].errors[0].code === 'file-too-large' && 'File terlalu besar. Maksimal 10MB.'}
+                                                {fileRejections[0].errors[0].code === 'file-invalid-type' && 'Tipe file tidak valid. Hanya gambar (.jpg, .png, .jpeg) yang diperbolehkan.'}
+                                            </span>
+                                        )}
+                                    </FormMessage>
+                                </FormItem>
+                                )}
+                            />
+                        )}
+
+                        {partnerMode === 'existing' && selectedPartner && (
+                            <div className="col-span-3 rounded-lg border border-teal-200 bg-teal-50 p-2">
+                                <p className="text-sm text-teal-800">
+                                    <span className="font-medium">Logo Mitra:</span> Menggunakan logo yang sudah tersimpan dari profil mitra "{selectedPartner.partnerName}".
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
                 </div>

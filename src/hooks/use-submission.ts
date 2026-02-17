@@ -1,7 +1,8 @@
 import { submissionService } from "@/api/services/submissio.service";
 import type { CreateMoAIASubmissionRequest } from "@/types/submission.type";
-import type { QueryParams } from "@/types/table.types";
+import type { QueryParams, SearchParams } from "@/types/table.types";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useNavigate } from "react-router";
 import { toast } from "sonner"
 
@@ -14,6 +15,7 @@ export const submissionKeys = {
     moaIaByUser: (userId: string) => [...submissionKeys.moaIa(), 'user', userId] as const,
     moaIaByUserList: (params: QueryParams, userId: string) => 
         [...submissionKeys.moaIaByUser(userId), 'list', params] as const,
+    partnerList: (search: SearchParams) => [...submissionKeys.all, 'partners', search] as const,
 }
 
 export function useSubmissions(params: QueryParams) {
@@ -94,9 +96,32 @@ export function useCreateSubmission() {
         },
 
         onError: (error) => {
-            toast.error("Gagal membuat pengajuan : " + error.message)
-            console.log("error creating submission: " + error.message)
+            let message = error.message;
+  
+            if (error instanceof AxiosError && error.response?.data) {
+                console.log("error response status: " + error.response.status)
+                if (error.response.status === 409) {
+                    message = "Nama mitra sudah pernah digunakan untuk jenis MoAIA yang sama. Silakan gunakan nama mitra yang berbeda.";
+                }
+            }
+            
+            toast.error("Gagal membuat pengajuan: " + message);
+            console.log("failed to create submission: " + message);
         }
+    })
+}
+
+export function usePartners(search: SearchParams) {
+    return useQuery({
+        queryKey: submissionKeys.partnerList(search),
+
+        queryFn: () => submissionService.getAllExistingPartners(search),
+
+        placeholderData: keepPreviousData,
+
+        staleTime: 10 * 60 * 1000,
+
+        refetchOnWindowFocus: false,
     })
 }
 
