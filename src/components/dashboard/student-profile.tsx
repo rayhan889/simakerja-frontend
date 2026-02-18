@@ -55,7 +55,7 @@ function DetailItem({
 }) {
   return (
     <div className="flex items-start gap-3 rounded-lg bg-[#F4F6F5] p-3.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600/20">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600/10">
         <Icon className="h-4 w-4 text-teal-950" />
       </div>
       <div className="min-w-0 text-start font-secondary">

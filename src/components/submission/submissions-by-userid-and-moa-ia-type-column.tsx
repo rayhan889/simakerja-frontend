@@ -1,7 +1,7 @@
-import type { DocumentActivity, SubmissionsByUserIdAndMoAIAType, SubmissionStatus } from "@/types/submission.type";
+import type { ActivityType, MoAIASubmissionType, SubmissionsByUserIdAndMoAIAType, SubmissionStatus } from "@/types/submission.type";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "../ui/badge";
-import { Eye, MoreHorizontal } from "lucide-react";
+import { Eye } from "lucide-react";
 
 
 const submissionByUserIdAndMoATypeColumnHelper = createColumnHelper<SubmissionsByUserIdAndMoAIAType>();
@@ -33,7 +33,7 @@ export const submissionByUserIdAndMoATypeColumns: ColumnDef<SubmissionsByUserIdA
     submissionByUserIdAndMoATypeColumnHelper.accessor('activityType', {
         header: 'Bentuk Kerjasama',
         cell: (info) => {
-            const activity = info.getValue() as DocumentActivity;
+            const activity = info.getValue() as ActivityType;
             return (
                 <span className="text-gray-600">
                     {
@@ -50,6 +50,23 @@ export const submissionByUserIdAndMoATypeColumns: ColumnDef<SubmissionsByUserIdA
         enableSorting:false
     }),
 
+    submissionByUserIdAndMoATypeColumnHelper.accessor('documentType', {
+        header: 'Tipe Dokumen',
+        cell: (info) => {
+            const documentType = info.getValue() as MoAIASubmissionType;
+            return (
+                <span className="text-gray-600">
+                    {
+                        documentType == 'moa' ? 'MoA' :
+                        documentType == 'ia' ? 'IA' :
+                        documentType
+                    }
+                </span>
+            );
+        },
+        enableSorting:false
+    }),
+
     submissionByUserIdAndMoATypeColumnHelper.accessor('status', {
         header: 'Status',
         cell: (info) => {
@@ -57,7 +74,15 @@ export const submissionByUserIdAndMoATypeColumns: ColumnDef<SubmissionsByUserIdA
             return (
                 <Badge 
                     variant={'secondary'}
-                    style={{backgroundColor: status == 'pending' ? 'yellow' : status == 'in_process' ? 'blue' : status == 'verified_adhoc' ? 'green' : status == 'verified_staff' ? 'green' : status == 'rejected' ? 'red' : status == 'completed' ? 'gray' : 'transparent'}}
+                    className={`
+                        ${status == 'pending' ? 'bg-yellow-600/20' : 
+                        status == 'in_process' ? 'bg-blue-600/20' : 
+                        status == 'verified_adhoc' ? 'bg-green-600/20' : 
+                        status == 'verified_staff' ? 'bg-green-600/20' : 
+                        status == 'rejected' ? 'bg-red-600/20' : 
+                        status == 'completed' ? 'bg-gray-600/20' : 'transparent'}
+                        
+                        `}
                 >{
                     status == 'pending' ? 'Pending' :
                     status == 'in_process' ? 'Dalam Proses' :
@@ -114,16 +139,6 @@ export const submissionByUserIdAndMoATypeColumns: ColumnDef<SubmissionsByUserIdA
                 title="Lihat detail"
                 >
                 <Eye className="h-4 w-4" />
-                </button>
-                
-                <button
-                onClick={() => {
-                    console.log('More options:', info.row.original);
-                }}
-                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                title="Opsi lainnya"
-                >
-                <MoreHorizontal className="h-4 w-4" />
                 </button>
             </div>
         ),

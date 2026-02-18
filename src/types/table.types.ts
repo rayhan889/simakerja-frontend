@@ -7,6 +7,10 @@ export interface QueryParams {
     search?: string;
 }
 
+export interface SearchParams {
+    search?: string;
+}
+
 export interface DataTableConfig {
     enableSearch?: boolean;
     searchPlaceholder?: string;

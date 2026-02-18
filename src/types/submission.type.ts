@@ -4,9 +4,9 @@ export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 've
 
 export type MoAIASubmissionType = 'moa' | 'ia';
 
-export type DocumentActivity = 'internship' | 'study_independent' | 'kkn' | 'research' | 'community_service';
+export type ActivityType = 'internship' | 'study_independent' | 'kkn' | 'research' | 'community_service';
 
-export const activityLabels: Record<DocumentActivity, string> = {
+export const activityLabels: Record<ActivityType, string> = {
   internship: 'Magang',
   study_independent: 'Studi Independen',
   kkn: 'KKN',
@@ -38,7 +38,7 @@ export interface MoAIASubmission {
     partnerRepresentativeName: string;
     partnerRepresentativePosition: string;
     studentSnapshot: StudentSnapshot;
-    documentActivity: DocumentActivity;
+    activityType: ActivityType;
     documentType: MoAIASubmissionType;
 }
 
@@ -53,7 +53,54 @@ export interface SubmissionsByUserIdAndMoAIAType {
     partnerName: string;
     partnerNumber: string;
     status: SubmissionStatus;
-    activityType: DocumentActivity;
+    activityType: ActivityType;
     submissionDate: string;
     notes?: string;
+    documentType: MoAIASubmissionType;
 }
+
+export interface StudentSnapshotRequest {
+    studyProgram: string;
+    students: Array<string>;
+    unit: string;
+}
+
+export interface MoAIADetailRequest {
+    documentType: MoAIASubmissionType;
+    partnerName: string;
+    partnerAddress: string;
+    partnerLogoKey: string;
+    partnerNumber: string;
+    facultyRepresentativeName: string;
+    partnerRepresentativeName: string;
+    partnerRepresentativePosition: string;
+    activityType: ActivityType;
+    studentSnapshots: Array<StudentSnapshotRequest>;
+}
+
+export interface CreateMoAIASubmissionRequest {
+    submissionType: SubmissionType;
+    notes?: string;
+    faculty: string;
+    facultyAddress: string;
+    moaIa: MoAIADetailRequest;
+}
+
+export interface PartnerAndFacultyProfile {
+    partnerName: string
+    partnerAddress: string
+    partnerNumber: string
+    partnerRepresentativeName: string
+    partnerRepresentativePosition: string
+    activityType: ActivityType
+    partnerLogoKey: string
+    facultyRepresentativeName: string
+}
+
+export const studyProgramOptions = [
+  { value: 'teknik_informatika', label: 'Teknik Informatika' },
+  { value: 'sistem_informasi', label: 'Sistem Informasi' },
+  { value: 'pendidikan_teknologi_informasi', label: 'Pendidikan Teknologi Informasi' },
+] as const;
+
+export type StudyProgram = typeof studyProgramOptions[number]['value'];

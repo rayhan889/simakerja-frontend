@@ -3,6 +3,7 @@ import { useAuthInitializer } from './hooks/use-auth';
 import { AppRouter } from './routes';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import './App.css'
+import { Toaster } from "@/components/ui/sonner"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthInitializer>
         <AppRouter />
+        <Toaster 
+          position='top-center'
+        />
       </AuthInitializer>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
