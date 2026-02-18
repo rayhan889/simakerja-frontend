@@ -27,7 +27,7 @@ export const submissionByUserIdAndMoATypeColumns: ColumnDef<SubmissionsByUserIdA
             </div>
         );
         },
-        enableSorting: true, 
+        enableSorting: false, 
     }),
 
     submissionByUserIdAndMoATypeColumnHelper.accessor('activityType', {
