@@ -66,7 +66,7 @@ export const DashboardSubmissionHistory = () => {
 
     if (isError) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-8">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-8 w-full">
         <div className="flex flex-col items-center text-center">
           <svg
             className="h-12 w-12 text-red-400"
