@@ -50,6 +50,7 @@ export interface StudentSnapshot {
 }
 
 export interface SubmissionsByUserIdAndMoAIAType {
+    submissionId: string;
     partnerName: string;
     partnerNumber: string;
     status: SubmissionStatus;

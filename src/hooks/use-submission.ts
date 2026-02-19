@@ -15,7 +15,7 @@ export const submissionKeys = {
     moaIaByUser: (userId: string) => [...submissionKeys.moaIa(), 'user', userId] as const,
     moaIaByUserList: (params: QueryParams, userId: string) => 
         [...submissionKeys.moaIaByUser(userId), 'list', params] as const,
-    partnerList: (search: SearchParams) => [...submissionKeys.all, 'partners', search] as const,
+    partnerList: (search?: SearchParams) => [...submissionKeys.all, 'partners', search] as const,
 }
 
 export function useSubmissions(params: QueryParams) {
@@ -111,7 +111,7 @@ export function useCreateSubmission() {
     })
 }
 
-export function usePartners(search: SearchParams) {
+export function usePartners(search?: SearchParams) {
     return useQuery({
         queryKey: submissionKeys.partnerList(search),
 

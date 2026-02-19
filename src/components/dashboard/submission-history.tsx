@@ -5,7 +5,8 @@ import { useCallback, useMemo, useState } from 'react'
 import { DataTable } from '../data-table/data-table'
 import { DataTableSearch } from '../data-table/data-table-search'
 import { useAuth } from '@/hooks/use-auth'
-import { submissionByUserIdAndMoATypeColumns } from '../submission/submissions-by-userid-and-moa-ia-type-column';
+import { getSubmissionByUserIdAndMoATypeColumns } from '../submission/submissions-by-userid-and-moa-ia-type-column';
+import { PDFViewerDialog } from '../submission/pdf-viewer-dialog'
 
 export const DashboardSubmissionHistory = () => {
 
@@ -39,6 +40,24 @@ export const DashboardSubmissionHistory = () => {
   const tableData = data?.content ?? [];
   const totalItems = data?.totalElements ?? 0;
   const totalPages = data?.totalPages ?? 0;
+
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<{
+      id: string;
+      partnerName: string;
+  } | null>(null);
+
+  const handleViewPdf = useCallback((submissionId: string, partnerName: string) => {
+      setSelectedSubmission({ id: submissionId, partnerName });
+      setPdfDialogOpen(true);
+  }, []);
+
+  const columns = useMemo(
+      () => getSubmissionByUserIdAndMoATypeColumns({
+          onViewPdf: handleViewPdf,
+      }),
+      [handleViewPdf]
+  );
 
     const handleSearchChange = useCallback((value: string) => {
       setSearch(value);
@@ -129,7 +148,7 @@ export const DashboardSubmissionHistory = () => {
       </div>
 
       <DataTable
-        columns={submissionByUserIdAndMoATypeColumns}
+        columns={columns}
         
         data={tableData}
         totalItems={totalItems}
@@ -144,6 +163,13 @@ export const DashboardSubmissionHistory = () => {
         isLoading={isLoading}
         
         pageSizeOptions={[10, 20, 50]}
+      />
+
+      <PDFViewerDialog
+          submissionId={selectedSubmission?.id ?? null}
+          partnerName={selectedSubmission?.partnerName}
+          open={pdfDialogOpen}
+          onOpenChange={setPdfDialogOpen}
       />
     </div>
   );

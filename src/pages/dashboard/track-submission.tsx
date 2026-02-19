@@ -1,6 +1,6 @@
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableSearch } from "@/components/data-table/data-table-search";
-import { submissionByUserIdAndMoATypeColumns } from "@/components/submission/submissions-by-userid-and-moa-ia-type-column";
+import { getSubmissionByUserIdAndMoATypeColumns } from "@/components/submission/submissions-by-userid-and-moa-ia-type-column";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubmissionsByUserIdAndMoAIAType } from "@/hooks/use-submission";
 import { type QueryParams, toSpringSort } from "@/types/table.types";
@@ -10,6 +10,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Link } from "react-router";
 import { cn } from "@/lib/utils";
 import { Send } from 'lucide-react'
+import { PDFViewerDialog } from "@/components/submission/pdf-viewer-dialog";
 
 export const DashboardTrackSubmissionPage = () => {
   
@@ -24,6 +25,12 @@ export const DashboardTrackSubmissionPage = () => {
     const [sorting, setSorting] = useState<SortingState>([])
   
     const [search, setSearch] = useState<string>("")
+
+    const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+    const [selectedSubmission, setSelectedSubmission] = useState<{
+        id: string;
+        partnerName: string;
+    } | null>(null);
   
     const queryParams = useMemo<QueryParams>(() => ({
       page: pagination.pageIndex,
@@ -43,6 +50,18 @@ export const DashboardTrackSubmissionPage = () => {
     const tableData = data?.content ?? [];
     const totalItems = data?.totalElements ?? 0;
     const totalPages = data?.totalPages ?? 0;
+
+    const handleViewPdf = useCallback((submissionId: string, partnerName: string) => {
+        setSelectedSubmission({ id: submissionId, partnerName });
+        setPdfDialogOpen(true);
+    }, []);
+
+    const columns = useMemo(
+        () => getSubmissionByUserIdAndMoATypeColumns({
+            onViewPdf: handleViewPdf,
+        }),
+        [handleViewPdf]
+    );
   
       const handleSearchChange = useCallback((value: string) => {
         setSearch(value);
@@ -141,7 +160,7 @@ export const DashboardTrackSubmissionPage = () => {
         </div>
   
         <DataTable
-          columns={submissionByUserIdAndMoATypeColumns}
+          columns={columns}
           
           data={tableData}
           totalItems={totalItems}
@@ -156,6 +175,13 @@ export const DashboardTrackSubmissionPage = () => {
           isLoading={isLoading}
           
           pageSizeOptions={[10, 20, 50]}
+        />
+
+        <PDFViewerDialog
+            submissionId={selectedSubmission?.id ?? null}
+            partnerName={selectedSubmission?.partnerName}
+            open={pdfDialogOpen}
+            onOpenChange={setPdfDialogOpen}
         />
       </div>
     );
