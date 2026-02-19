@@ -82,7 +82,7 @@ export const DashboardSidebar = ({
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-3 py-4 font-secondary">
         <ul className="flex flex-col gap-2">
           {updatedNavItems.map((item) => (
             <li key={item.label}>
