@@ -1,6 +1,6 @@
-export type UserRole = 'student' | 'lecturer' | 'staff' | 'adhoc';
+import type { UserRole } from "./user.type";
 
-export interface User {
+export interface AuthUser {
     id: string;
     sub: string;
     email: string;
@@ -14,7 +14,7 @@ export interface User {
 }
 
 export interface AuthState {
-    user: User | null;
+    user: AuthUser | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
