@@ -7,6 +7,7 @@ import { DashboardPage } from '@/pages/dashboard'
 import { DashboardTrackSubmissionPage } from '@/pages/dashboard/track-submission'
 import { DashboardSubmitSubmissionPage } from '@/pages/dashboard/submit-submission'
 import DashboardUpdateSubmissionPage from '@/pages/dashboard/update-submission'
+import DashboardUpdateUserPage from '@/pages/dashboard/update-user'
 
 const router = createBrowserRouter([
     {
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
             {
                 path: "/dashboard/submission/:submissionId/edit",
                 element: <DashboardUpdateSubmissionPage />
+            },
+            {
+                path: "/dashboard/user/update",
+                element: <DashboardUpdateUserPage />
             }
         ]
     },

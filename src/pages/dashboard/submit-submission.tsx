@@ -903,7 +903,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    <SelectLabel>Program Studis</SelectLabel>
+                                                    <SelectLabel>Program Studi</SelectLabel>
                                                     {studyProgramOptions.map((option) => (
                                                         <SelectItem key={option.value} value={option.value}>
                                                         {option.label}

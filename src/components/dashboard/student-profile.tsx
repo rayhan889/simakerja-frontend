@@ -3,6 +3,7 @@ import { User, IdCard, University, Phone } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 import { useAuth } from '@/hooks/use-auth'
+import { studyProgramOptions } from '@/types/submission.type'
 
 export const DashboardStudentProfile = () => {
 
@@ -36,7 +37,7 @@ export const DashboardStudentProfile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
             <DetailItem icon={User} label="Nama" value={user?.fullName.replace(/^\d+_/, "") || "-"} />
             <DetailItem icon={IdCard} label="NIM" value={user?.nim || "-"} />
-            <DetailItem icon={University} label="Jurusan" value={user?.studyProgram || "-"} />
+            <DetailItem icon={University} label="Jurusan" value={studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"} />
             <DetailItem icon={Phone} label="Telepon" value={user?.phoneNumber || "-"} />
         </div>
 

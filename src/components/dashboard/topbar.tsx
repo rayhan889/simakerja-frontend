@@ -1,7 +1,17 @@
 import { Bell } from "lucide-react"
 import { Avatar } from "radix-ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "react-router";
 
 export const DashboardTopbar = () => {
     const { user } = useAuth();
@@ -26,16 +36,37 @@ export const DashboardTopbar = () => {
             2
           </span>
         </button>
-        <Avatar.Root className="h-9 w-9 cursor-pointer">
-            <Avatar.Image
-              src={user?.profilePicture}
-              alt={user?.fullName}
-              className="rounded-full"
-            />
-          <Avatar.Fallback className="bg-primary text-primary-foreground text-xs font-bold">
-            {user?.fullName.split(" ").map(name => name[0]).join("")}
-          </Avatar.Fallback>
-        </Avatar.Root>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar.Root className="h-9 w-9 cursor-pointer">
+              <Avatar.Image
+                src={user?.profilePicture}
+                alt={user?.fullName}
+                className="rounded-full"
+              />
+            <Avatar.Fallback className="bg-primary text-primary-foreground text-xs font-bold">
+              {user?.fullName.split(" ").map(name => name[0]).join("")}
+            </Avatar.Fallback>
+          </Avatar.Root>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="mr-6">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                Pengaturan
+              </DropdownMenuLabel>
+              <Link to="/dashboard/user/update">
+                <DropdownMenuItem>
+                  Profil
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuGroup>
+            <DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+      </DropdownMenu>
       </div>
     </header>
   )

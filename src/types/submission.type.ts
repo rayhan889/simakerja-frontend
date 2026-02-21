@@ -142,6 +142,6 @@ export const studyProgramOptions = [
   { value: 'teknik_informatika', label: 'Teknik Informatika' },
   { value: 'sistem_informasi', label: 'Sistem Informasi' },
   { value: 'pendidikan_teknologi_informasi', label: 'Pendidikan Teknologi Informasi' },
-] as const;
+];
 
 export type StudyProgram = typeof studyProgramOptions[number]['value'];
