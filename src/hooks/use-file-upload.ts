@@ -30,3 +30,32 @@ export function useUploadPartnerLogo() {
         }
     })
 }
+
+export function useGetPresignedUrlPartnerLogo() {
+    return useMutation({
+        
+        mutationFn: async (objectKey: string) => {
+            if (!objectKey) {
+                throw new Error("No object key provided for getting presigned URL");
+            }
+
+            const response = await fileUploadService.getPresignedUrlPartnerLogo(objectKey);
+
+            if (response === null) {
+                throw new Error("Sesi anda telah berakhir!. Silahkan login kembali.");
+            }
+
+            if (!response.success) {
+                throw new Error("Gagal mendapatkan URL. Silahkan coba lagi.");
+            }
+
+            return response.data;
+        },
+
+        onError: (error) => {
+            toast.error("Gagal mendapatkan URL : " + error.message)
+            console.log("error getting presigned URL for partner logo: " + error.message)
+        }
+        
+    })
+}

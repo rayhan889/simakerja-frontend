@@ -514,9 +514,11 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <FormItem className='text-start flex flex-col col-span-3 space-y-2'>
                                     <FormLabel>Catatan</FormLabel>
                                     <FormControl>
-                                        <Input
+                                        <textarea
                                             {...field}
-                                            placeholder='Masukkan Catatan'
+                                            rows={4}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                            placeholder="Tambahkan catatan tambahan jika diperlukan..."
                                         />
                                     </FormControl>
                                     <FormMessage />
