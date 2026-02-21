@@ -7,15 +7,17 @@ import { type QueryParams, toSpringSort } from "@/types/table.types";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { useState, useMemo, useCallback } from "react";
 import { buttonVariants } from '@/components/ui/button';
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 import { Send } from 'lucide-react'
 import { PDFViewerDialog } from "@/components/submission/pdf-viewer-dialog";
+import type { SubmissionsByUserIdAndMoAIAType } from "@/types/submission.type";
 
 export const DashboardTrackSubmissionPage = () => {
   
   const { user } = useAuth();
     const userId = user?.id || "";
+    const navigate = useNavigate();
   
     const [pagination, setPagination] = useState<PaginationState>({
       pageIndex: 0,
@@ -56,11 +58,16 @@ export const DashboardTrackSubmissionPage = () => {
         setPdfDialogOpen(true);
     }, []);
 
+    const handleEdit = useCallback((submission: SubmissionsByUserIdAndMoAIAType) => {
+        navigate(`/dashboard/submission/${submission.submissionId}/edit`);
+    }, [navigate]);
+
     const columns = useMemo(
         () => getSubmissionByUserIdAndMoATypeColumns({
             onViewPdf: handleViewPdf,
+            onEdit: handleEdit,
         }),
-        [handleViewPdf]
+        [handleViewPdf, handleEdit]
     );
   
       const handleSearchChange = useCallback((value: string) => {

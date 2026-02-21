@@ -1,7 +1,7 @@
 import type { ActivityType, MoAIASubmissionType, SubmissionsByUserIdAndMoAIAType, SubmissionStatus } from "@/types/submission.type";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "../ui/badge";
-import { FileText } from "lucide-react";
+import { Pencil, FileText } from "lucide-react";
 
 
 const submissionByUserIdAndMoATypeColumnHelper = createColumnHelper<SubmissionsByUserIdAndMoAIAType>();
@@ -9,6 +9,7 @@ const submissionByUserIdAndMoATypeColumnHelper = createColumnHelper<SubmissionsB
 export interface SubmissionColumnOptions {
     onViewPdf?: (submissionId: string, partnerName: string) => void;
     onViewDetail?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
+    onEdit?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
 }
 
 export function getSubmissionByUserIdAndMoATypeColumns(
@@ -139,7 +140,10 @@ export function getSubmissionByUserIdAndMoATypeColumns(
             id: 'actions', 
             header: '',    
             cell: (info) => {
-                const { submissionId, partnerName } = info.row.original;
+                const submission = info.row.original;
+                const { submissionId, partnerName, status } = info.row.original;
+
+                const isEditable = status === 'pending' || status === 'in_process';
 
                 return (
                     <div className="flex items-center gap-1">
@@ -149,6 +153,18 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                             title="Lihat Dokumen"
                         >
                             <FileText className="h-4 w-4" />
+                        </button>
+                        <button
+                            onClick={() => isEditable && options.onEdit?.(submission)}
+                            disabled={!isEditable}
+                            className={`rounded-full p-2 transition-colors ${
+                                isEditable 
+                                    ? 'cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-600' 
+                                    : 'cursor-not-allowed text-gray-300 opacity-50'
+                            }`}
+                            title={isEditable ? "Edit Dokumen" : "Tidak dapat diedit (status bukan pending/dalam proses)"}
+                        >
+                            <Pencil className="h-4 w-4" />
                         </button>
                     </div>
                 );

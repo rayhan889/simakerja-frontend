@@ -1,3 +1,5 @@
+import type { User } from "./user.type";
+
 export type SubmissionType = 'moa_ia' | 'mou' | 'visit_request' | 'cooperation_request';
 
 export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 'verified_staff' |  'rejected' | 'completed';
@@ -66,17 +68,17 @@ export interface StudentSnapshotRequest {
     unit: string;
 }
 
-export interface MoAIADetailRequest {
-    documentType: MoAIASubmissionType;
+export interface MoaIaDetails {
     partnerName: string;
-    partnerAddress: string;
-    partnerLogoKey: string;
     partnerNumber: string;
     facultyRepresentativeName: string;
     partnerRepresentativeName: string;
     partnerRepresentativePosition: string;
     activityType: ActivityType;
+    documentType: MoAIASubmissionType;
     studentSnapshots: Array<StudentSnapshotRequest>;
+    partnerAddress: string;
+    partnerLogoKey: string;
 }
 
 export interface CreateMoAIASubmissionRequest {
@@ -84,7 +86,7 @@ export interface CreateMoAIASubmissionRequest {
     notes?: string;
     faculty: string;
     facultyAddress: string;
-    moaIa: MoAIADetailRequest;
+    moaIa: MoaIaDetails;
 }
 
 export interface PartnerAndFacultyProfile {
@@ -96,6 +98,44 @@ export interface PartnerAndFacultyProfile {
     activityType: ActivityType
     partnerLogoKey: string
     facultyRepresentativeName: string
+}
+
+export interface UpdateMoaIaSubmissionRequest {
+    notes?: string;
+    moaIa: MoaIaUpdateDetailRequest;
+}
+
+export interface MoaIaUpdateDetailRequest {
+    partnerName: string;
+    partnerNumber: string;
+    partnerAddress: string;
+    facultyRepresentativeName: string;
+    partnerRepresentativeName: string;
+    partnerRepresentativePosition: string;
+    activityType: ActivityType;
+    studentSnapshots: Array<StudentSnapshotRequest>;
+    partnerLogoKey: string;
+}
+
+export interface SubmissionDetails {
+    id: string;
+    user: User;
+    submissionCode: string;
+    submissionStatus: SubmissionStatus;
+    notes: string;
+    faculty: string;
+    submissionDate: string;
+
+    facultyLetterNumber?: string;
+    facultyAddress: string;
+    createdAt: string;
+    updatedAt: string;
+
+    moaIa?: MoaIaDetails | null;
+}
+
+export interface CooperationRequestDetails {
+    partnerName: string;
 }
 
 export const studyProgramOptions = [

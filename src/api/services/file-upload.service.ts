@@ -28,5 +28,24 @@ export const fileUploadService = {
           }
           throw error
         }
+    },
+
+    getPresignedUrlPartnerLogo: async (
+        objectKey: string
+    ): Promise<ApiResponse<string> | null> => {
+        try {
+            const response = await apiClient.post<ApiResponse<string>>(
+                '/uploads/partner-logo/get-url',
+                {
+                    objectKey,
+                }
+            );
+            return response.data;
+        } catch (error) {
+           if (error instanceof AxiosError && error.response?.status === 401) {
+            return null;
+          }
+          throw error
+        }
     }
 }
