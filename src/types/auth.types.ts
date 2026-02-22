@@ -24,6 +24,7 @@ export interface AuthState {
     loginWithGoogle: () => void;
     logout: () => Promise<void>;
     setError: (error: string | null) => void;
+    updateFields: (fields: Partial<AuthUser>) => void;
 }
 
 export interface ApiResponse<T> {

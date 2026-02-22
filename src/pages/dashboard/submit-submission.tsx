@@ -1,4 +1,4 @@
-import { Info, BookText, X, User, Trash2, Plus, Loader2, UploadCloud } from 'lucide-react'
+import { Info, BookText, User, Trash2, Plus, Loader2, UploadCloud } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod'
@@ -36,11 +36,30 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox"
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectGroup,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/ui/multi-select"
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { trigramSimilarity } from '@/lib/trigram';
+import { useGetAllRegisteredStudents } from '@/hooks/use-user';
+import type { StudentInfo } from '@/types/user.type';
+import { displayFullName } from '@/lib/display-fullname';
+import { useAuth } from '@/hooks/use-auth';
 
 const FACULTY_OF_TECHNOLOGY = 'Teknik';
 const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
+
+const studentInfoSchema = z.object({
+    fullName: z.string({ error: "Nama lengkap mahasiswa harus diisi" })
+        .min(1, "Nama lengkap mahasiswa harus diisi"),
+    nim: z.string({ error: "NIM mahasiswa harus diisi" }).min(11, "NIM mahasiswa harus terdiri dari minimal 11 karakter"),
+    email: z.email("Format email mahasiswa tidak valid"),
+})
 
 const studentSnapshotSchema = z.object({
     studyProgram: z
@@ -48,7 +67,7 @@ const studentSnapshotSchema = z.object({
         .min(1, "Program studi harus dipilih"),
     
     students: z
-        .array(z.string().min(1, "Nama mahasiswa tidak boleh kosong"))
+        .array(studentInfoSchema)
         .min(1, "Minimal 1 mahasiswa harus ditambahkan")
         .max(3, "Maksimal 3 mahasiswa per grup"),
     
@@ -172,87 +191,15 @@ const defaultValues: SubmissionFormValues = {
     },
 };
 
-interface StudentTagInputProps {
-  value: string[];
-  onChange: (value: string[]) => void;
-  maxItems?: number;
-  error?: boolean;
-}
-
-function StudentTagInput({
-    value = [],
-    onChange,
-    maxItems = 3,
-}: StudentTagInputProps) {
-    const [inputValue, setInputValue] = useState('');
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addStudent();
-    }
-  };
-
-  const addStudent = () => {
-    const trimmed = inputValue.trim();
-    if (trimmed && value.length < maxItems && !value.includes(trimmed)) {
-      onChange([...value, trimmed]);
-      setInputValue('');
-    }
-  };
-
-  const removeStudent = (index: number) => {
-    const newValue = [...value];
-    newValue.splice(index, 1);
-    onChange(newValue);
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg border border-gray-200 bg-white">
-        {value.map((student, index) => (
-          <span
-            key={index}
-            className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-teal-100 text-teal-800 rounded-md"
-          >
-            {student}
-            <button
-              type="button"
-              onClick={() => removeStudent(index)}
-              className="hover:text-teal-950 transition-colors"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
-        
-        {/* Inline Input */}
-        {value.length < maxItems && (
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={addStudent}
-            placeholder={value.length === 0 ? "Ketik nama lalu Enter..." : ""}
-            className="flex-1 min-w-[120px] outline-none text-sm bg-transparent"
-          />
-        )}
-      </div>
-      
-      <p className="text-xs text-gray-500">
-        {value.length}/{maxItems} mahasiswa (tekan Enter untuk menambah)
-      </p>
-    </div>
-  )
-}
-
 export const DashboardSubmitSubmissionPage = () => {
     const form = useForm<SubmissionFormValues>({
         resolver: zodResolver(submissionFormSchema),
         defaultValues,
         mode: 'onChange'
     })
+
+    const { user } = useAuth();
+    const isValidStudent = user?.role === 'student' && user?.nim && user?.studyProgram;
 
     const { fields, append, remove } = useFieldArray({
         control: form.control,
@@ -277,10 +224,17 @@ export const DashboardSubmitSubmissionPage = () => {
         error: errorPartners,
     } = usePartners();
 
+    const { 
+        data: students, 
+        isLoading: isLoadingStudents,
+        error: errorStudents,
+    }  = useGetAllRegisteredStudents(isValidStudent ? user.nim : undefined);
+
+    const isValidStudentAvaliable = students?.data && students?.data.length > 0;
+
     const formPartnerName = form.watch('moaIa.partnerName');
     const formPartnerNumber = form.watch('moaIa.partnerNumber');
     useEffect(() => {
-      
 
         if (partnerMode !== 'new' || !formPartnerName || !formPartnerNumber) {
             return;
@@ -402,6 +356,19 @@ export const DashboardSubmitSubmissionPage = () => {
             students: [],
             unit: '',
         })
+    }
+
+    function studentInfoToNims(students: StudentInfo[] | undefined): string[] {
+        return students?.map((s) => s.nim) ?? [];
+    }
+
+    function nimsToStudentInfo(
+        nims: string[],
+        studentsList: StudentInfo[] | undefined
+    ): StudentInfo[] {
+        if (!studentsList) return [];
+        const byNim = new Map(studentsList.map((s) => [s.nim, s]));
+        return nims.map((nim) => byNim.get(nim)).filter((s): s is StudentInfo => s != null);
     }
 
   return (
@@ -903,7 +870,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    <SelectLabel>Program Studis</SelectLabel>
+                                                    <SelectLabel>Program Studi</SelectLabel>
                                                     {studyProgramOptions.map((option) => (
                                                         <SelectItem key={option.value} value={option.value}>
                                                         {option.label}
@@ -936,24 +903,53 @@ export const DashboardSubmitSubmissionPage = () => {
                                 />
                             </div>
 
-                            <FormField
-                                control={form.control}
-                                name={`moaIa.studentSnapshots.${index}.students`}
-                                render={({ field, fieldState }) => (
-                                <FormItem className='text-start flex flex-col space-y-2'>
-                                    <FormLabel required>Daftar Mahasiswa</FormLabel>
-                                    <FormControl>
-                                    <StudentTagInput
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        maxItems={3}
-                                        error={!!fieldState.error}
-                                    />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
+                            {errorStudents ? (
+                                <div className="text-red-500 text-sm">Gagal memuat daftar mahasiswa</div>
+                            ) : (
+                                <FormField
+                                    control={form.control}
+                                    name={`moaIa.studentSnapshots.${index}.students`}
+                                    render={({ field }) => (
+                                        <FormItem className='text-start flex flex-col space-y-2'>
+                                            <FormLabel required>Daftar Mahasiswa</FormLabel>
+                                            <FormControl>
+                                            <div className="space-y-2">
+                                                <MultiSelect
+                                                    values={studentInfoToNims(field.value)}
+                                                    onValuesChange={(nims) => {
+                                                        field.onChange(nimsToStudentInfo(nims, students?.data));
+                                                    }}
+                                                >
+                                                    <MultiSelectTrigger 
+                                                        className="w-full"
+                                                        disabled={isLoadingStudents || !isValidStudentAvaliable}
+                                                    >
+                                                        <MultiSelectValue 
+                                                            placeholder={
+                                                                isLoadingStudents ? "Memuat mahasiswa..." : 
+                                                                isValidStudentAvaliable ? "Pilih mahasiswa" : "Tidak ada mahasiswa yang terdaftar"
+                                                            } 
+                                                        />
+                                                    </MultiSelectTrigger>
+                                                    {isValidStudentAvaliable && (
+                                                        <MultiSelectContent>
+                                                        <MultiSelectGroup>
+                                                            {students?.data.map((student) => (
+                                                                <MultiSelectItem key={student.nim} value={student.nim}>
+                                                                    [{student.nim}] - {displayFullName(student.fullName)} 
+                                                                </MultiSelectItem>
+                                                            ))}
+                                                        </MultiSelectGroup>
+                                                    </MultiSelectContent>
+                                                    )}
+                                                </MultiSelect>
+                                            </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
 
                             <div className="flex items-center gap-4">
                                 <Label className="text-sm text-gray-600">Total Mahasiswa:</Label>

@@ -25,3 +25,14 @@ export interface Staff {
     fullName: string;
     nip: string;
 }
+
+export interface UpdateStudentRequest {
+    nim: string;
+    studyProgram: string;
+}
+
+export interface StudentInfo {
+    fullName: string;
+    nim: string;
+    email: string;
+}

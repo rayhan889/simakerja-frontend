@@ -3,6 +3,8 @@ import { User, IdCard, University, Phone } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 import { useAuth } from '@/hooks/use-auth'
+import { studyProgramOptions } from '@/types/submission.type'
+import { displayFullName } from '@/lib/display-fullname'
 
 export const DashboardStudentProfile = () => {
 
@@ -23,7 +25,7 @@ export const DashboardStudentProfile = () => {
           </Avatar.Root>
 
           <div className='flex flex-col items-start gap-y-3'>
-            <h1 className='text-2xl font-bold'>{user?.fullName.replace(/^\d+_/, "")}</h1>
+            <h1 className='text-2xl font-bold'>{displayFullName(user?.fullName || "")}</h1>
 
             <Badge variant={'outline'} className='border-gray-200'>
               {user?.role === 'student' ? 'Mahasiswa' : user?.role === 'staff' ? 'Staf' : 'Admin'}
@@ -34,9 +36,9 @@ export const DashboardStudentProfile = () => {
         <hr className='w-full h-px text-gray-200' />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
-            <DetailItem icon={User} label="Nama" value={user?.fullName.replace(/^\d+_/, "") || "-"} />
+            <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} />
             <DetailItem icon={IdCard} label="NIM" value={user?.nim || "-"} />
-            <DetailItem icon={University} label="Jurusan" value={user?.studyProgram || "-"} />
+            <DetailItem icon={University} label="Jurusan" value={studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"} />
             <DetailItem icon={Phone} label="Telepon" value={user?.phoneNumber || "-"} />
         </div>
 

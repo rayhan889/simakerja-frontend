@@ -1,5 +1,5 @@
 import { usePartners, useSubmissionDetails, useUpdateSubmission } from '@/hooks/use-submission';
-import { BookText, Info, Loader2, Plus, Trash2, UploadCloud, User, X } from 'lucide-react';
+import { BookText, Info, Loader2, Plus, Trash2, UploadCloud, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router';
@@ -30,6 +30,24 @@ import { useGetPresignedUrlPartnerLogo, useUploadPartnerLogo } from '@/hooks/use
 import { toast } from 'sonner';
 import { trigramSimilarity } from '@/lib/trigram';
 import { useDropzone } from 'react-dropzone';
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectGroup,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/ui/multi-select"
+import { useGetAllRegisteredStudents } from '@/hooks/use-user';
+import type { StudentInfo } from '@/types/user.type';
+import { displayFullName } from '@/lib/display-fullname';
+
+const studentInfoSchema = z.object({
+    fullName: z.string({ error: "Nama lengkap mahasiswa harus diisi" })
+        .min(1, "Nama lengkap mahasiswa harus diisi"),
+    nim: z.string({ error: "NIM mahasiswa harus diisi" }).min(11, "NIM mahasiswa harus terdiri dari minimal 11 karakter"),
+    email: z.email("Format email mahasiswa tidak valid"),
+})
 
 const studentSnapshotSchema = z.object({
     studyProgram: z
@@ -37,7 +55,7 @@ const studentSnapshotSchema = z.object({
         .min(1, "Program studi harus dipilih"),
     
     students: z
-        .array(z.string().min(1, "Nama mahasiswa tidak boleh kosong"))
+        .array(studentInfoSchema)
         .min(1, "Minimal 1 mahasiswa harus ditambahkan")
         .max(3, "Maksimal 3 mahasiswa per grup"),
     
@@ -124,83 +142,6 @@ const updateSubmissionFormSchema = z.object({
 
 type UpdateSubmissionFormValues = z.infer<typeof updateSubmissionFormSchema>;
 
-interface StudentTagInputProps {
-  value: string[];
-  onChange: (value: string[]) => void;
-  maxItems?: number;
-  disabled?: boolean;
-}
-
-function StudentTagInput({
-    value = [],
-    onChange,
-    maxItems = 3,
-    disabled = false,
-}: StudentTagInputProps) {
-    const [inputValue, setInputValue] = useState('');
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addStudent();
-        }
-    };
-
-    const addStudent = () => {
-        const trimmed = inputValue.trim();
-        if (trimmed && value.length < maxItems && !value.includes(trimmed)) {
-            onChange([...value, trimmed]);
-            setInputValue('');
-        }
-    };
-
-    const removeStudent = (index: number) => {
-        const newValue = [...value];
-        newValue.splice(index, 1);
-        onChange(newValue);
-    };
-
-    return (
-        <div className="space-y-2">
-            <div className={`flex flex-wrap gap-2 min-h-9.5 p-2 rounded-lg border border-gray-200 bg-white ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
-                {value.map((student, index) => (
-                    <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-teal-100 text-teal-800 rounded-md"
-                    >
-                        {student}
-                        {!disabled && (
-                            <button
-                                type="button"
-                                onClick={() => removeStudent(index)}
-                                className="hover:text-teal-950 transition-colors"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        )}
-                    </span>
-                ))}
-                
-                {!disabled && value.length < maxItems && (
-                    <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        onBlur={addStudent}
-                        placeholder={value.length === 0 ? "Ketik nama lalu Enter..." : ""}
-                        className="flex-1 min-w-30 outline-none text-sm bg-transparent"
-                    />
-                )}
-            </div>
-            
-            <p className="text-xs text-gray-500">
-                {value.length}/{maxItems} mahasiswa (tekan Enter untuk menambah)
-            </p>
-        </div>
-    )
-}
-
 const DashboardUpdateSubmissionPage = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
     const navigate = useNavigate();
@@ -213,6 +154,12 @@ const DashboardUpdateSubmissionPage = () => {
     } = useSubmissionDetails(submissionId || '');
 
     const { data: partnersResponse } = usePartners();
+
+    const { 
+        data: students, 
+        isLoading: isLoadingStudents,
+        error: errorStudents,
+    }  = useGetAllRegisteredStudents()
 
     const submissionDetails = submissionResponse?.data;
     const moaIaDetails = submissionDetails?.moaIa ?? null;
@@ -248,6 +195,13 @@ const DashboardUpdateSubmissionPage = () => {
         }
     }, [moaIaDetails?.partnerLogoKey, getPresignedUrlPartnerLogo])
 
+    const isPartnerExisting = moaIaDetails && partnersResponse?.data?.some(
+        p => p.partnerName === moaIaDetails.partnerName && 
+             p.partnerNumber === moaIaDetails.partnerNumber
+    );
+
+    const isPartnerFieldDisabled = !!isPartnerExisting;
+
     const formPartnerName = form.watch('moaIa.partnerName');
     const formPartnerNumber = form.watch('moaIa.partnerNumber');
     useEffect(() => {
@@ -256,8 +210,7 @@ const DashboardUpdateSubmissionPage = () => {
                 partnersResponse?.data.forEach(partner => {
 
                 const partnerNameSimilaryPoint = trigramSimilarity(partner.partnerName, formPartnerName);
-                console.log('similary point: ' + partnerNameSimilaryPoint)
-                if (partnerNameSimilaryPoint > 0.6 && partner.partnerNumber === formPartnerNumber) {
+                if (!isPartnerFieldDisabled && (partnerNameSimilaryPoint > 0.6 && partner.partnerNumber === formPartnerNumber)) {
                     toast.error(`
                         Profil mitra yang Anda masukkan mirip dengan mitra yang sudah ada: 
                         "${partner.partnerName}". Jika ini adalah mitra baru, 
@@ -271,19 +224,12 @@ const DashboardUpdateSubmissionPage = () => {
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [formPartnerName, formPartnerNumber, partnersResponse])
+    }, [formPartnerName, formPartnerNumber, partnersResponse, isPartnerFieldDisabled])
 
     const { fields, append, remove } = useFieldArray({
         control: form.control,
         name: "moaIa.studentSnapshots"
     });
-
-    const isPartnerExisting = moaIaDetails && partnersResponse?.data?.some(
-        p => p.partnerName === moaIaDetails.partnerName && 
-             p.partnerNumber === moaIaDetails.partnerNumber
-    );
-
-    const isPartnerFieldDisabled = !!isPartnerExisting;
 
     const onUploadPartnerLogo = useCallback(async (file: File) => {
             uploadPartnerLogo(file, {
@@ -351,6 +297,19 @@ const DashboardUpdateSubmissionPage = () => {
             moaIa: data.moaIa
         });
     };
+
+    function studentInfoToNims(students: StudentInfo[] | undefined): string[] {
+        return students?.map((s) => s.nim) ?? [];
+    }
+
+    function nimsToStudentInfo(
+        nims: string[],
+        studentsList: StudentInfo[] | undefined
+    ): StudentInfo[] {
+        if (!studentsList) return [];
+        const byNim = new Map(studentsList.map((s) => [s.nim, s]));
+        return nims.map((nim) => byNim.get(nim)).filter((s): s is StudentInfo => s != null);
+    }
 
     if (isLoadingSubmission) {
         return (
@@ -561,76 +520,85 @@ const DashboardUpdateSubmissionPage = () => {
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="moaIa.partnerLogoKey"
-                            render={() => (
-                            <FormItem className='text-start flex flex-col space-y-2 col-span-3'>
-                                <FormLabel required>Logo Mitra</FormLabel>
-                                {isLoadingGetPresignedUrlPartnerLogo && (
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
-                                        <span className="text-sm text-gray-500">Memuat logo...</span>
-                                    </div>
-                                )}
-                                {partnerLogoPreviewUrl ? (
-                                    <div className='w-full border border-gray-200 max-h-60 overflow-hidden relative rounded-md bg-transparent p-3'>
-
-                                        <Button
-                                            variant='ghost' 
-                                            size='icon' 
-                                            className='absolute top-2 cursor-pointer right-2 z-50 text-red-500 hover:text-red-700 hover:bg-red-50' 
-                                                onClick={() => { removePartnerLogo(); }}
-                                        >
-                                            <Trash2 />
-                                        </Button>
-
-                                        <img src={partnerLogoPreviewUrl} alt="Partner Logo Preview" className="w-full h-full object-contain" />
-                                    </div>
-                                ) : (
-                                    <>
-                                    <FormControl>
-                                        <div 
-                                            {...getRootProps()}
-                                            className={`flex max-h-80 
-                                                ${isDragActive ? 'bg-blue-50 border-blue-500' : ''} 
-                                                ${partnerLogoPreviewUrl ? 'border-none' : 'border-gray-200 h-40'}
-                                                w-full cursor-pointer items-center justify-center space-x-2 overflow-y-hidden rounded-md border border-dashed bg-transparent text-sm`
-                                            }
-                                        >
-                                            {isUploadingPartnerLogo ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" />
-                                                    <span>Mengunggah...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <UploadCloud className='h-5 w-5 text-gray-500' />
-                                                    {
-                                                        isDragActive ? (
-                                                            <p className="text-sm text-gray-500">Lepaskan file di sini</p>
-                                                        ) : (
-                                                            <p className="text-sm text-gray-500">Tarik dan lepaskan file atau klik untuk memilih file</p>
-                                                        )
-                                                    }
-                                                </>
-                                            )}
-                                            <Input {...getInputProps()} type='file' />
+                        {isPartnerFieldDisabled ? (
+                            <div className="col-span-3 rounded-lg border border-teal-200 bg-teal-50 p-2">
+                                <p className="text-sm text-teal-800">
+                                    <span className="font-medium">Logo Mitra:</span> Menggunakan logo yang sudah tersimpan dari profil mitra "{moaIaDetails.partnerName}".
+                                </p>
+                            </div>
+                        ) : (
+                            <FormField
+                                control={form.control}
+                                name="moaIa.partnerLogoKey"
+                                render={() => (
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-3'>
+                                    <FormLabel required>Logo Mitra</FormLabel>
+                                    {isLoadingGetPresignedUrlPartnerLogo && (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                                            <span className="text-sm text-gray-500">Memuat logo...</span>
                                         </div>
-                                    </FormControl>
-                                    </>
-                                )}
-                                <FormMessage>
-                                    {fileRejections.length !== 0 && (
-                                        <span className="text-sm text-red-500">
-                                            {fileRejections[0].errors[0].code === 'file-too-large' && 'File terlalu besar. Maksimal 10MB.'}
-                                            {fileRejections[0].errors[0].code === 'file-invalid-type' && 'Tipe file tidak valid. Hanya gambar (.jpg, .png, .jpeg) yang diperbolehkan.'}
-                                        </span>
                                     )}
-                                </FormMessage>
-                            </FormItem>
-                            )}
-                        />
+                                    {partnerLogoPreviewUrl ? (
+                                        <div className='w-full border border-gray-200 max-h-60 overflow-hidden relative rounded-md bg-transparent p-3'>
+
+                                            <Button
+                                                variant='ghost' 
+                                                size='icon' 
+                                                className='absolute top-2 cursor-pointer right-2 z-50 text-red-500 hover:text-red-700 hover:bg-red-50' 
+                                                    onClick={() => { removePartnerLogo(); }}
+                                            >
+                                                <Trash2 />
+                                            </Button>
+
+                                            <img src={partnerLogoPreviewUrl} alt="Partner Logo Preview" className="w-full h-full object-contain" />
+                                        </div>
+                                    ) : (
+                                        <>
+                                        <FormControl>
+                                            <div 
+                                                {...getRootProps()}
+                                                className={`flex max-h-80 
+                                                    ${isPartnerFieldDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                                                    ${isDragActive ? 'bg-blue-50 border-blue-500' : ''} 
+                                                    ${partnerLogoPreviewUrl ? 'border-none' : 'border-gray-200 h-40'}
+                                                    w-full cursor-pointer items-center justify-center space-x-2 overflow-y-hidden rounded-md border border-dashed bg-transparent text-sm`
+                                                }
+                                            >
+                                                {isUploadingPartnerLogo ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" />
+                                                        <span>Mengunggah...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <UploadCloud className='h-5 w-5 text-gray-500' />
+                                                        {
+                                                            isDragActive ? (
+                                                                <p className="text-sm text-gray-500">Lepaskan file di sini</p>
+                                                            ) : (
+                                                                <p className="text-sm text-gray-500">Tarik dan lepaskan file atau klik untuk memilih file</p>
+                                                            )
+                                                        }
+                                                    </>
+                                                )}
+                                                <Input {...getInputProps()} type='file' />
+                                            </div>
+                                        </FormControl>
+                                        </>
+                                    )}
+                                    <FormMessage>
+                                        {fileRejections.length !== 0 && (
+                                            <span className="text-sm text-red-500">
+                                                {fileRejections[0].errors[0].code === 'file-too-large' && 'File terlalu besar. Maksimal 10MB.'}
+                                                {fileRejections[0].errors[0].code === 'file-invalid-type' && 'Tipe file tidak valid. Hanya gambar (.jpg, .png, .jpeg) yang diperbolehkan.'}
+                                            </span>
+                                        )}
+                                    </FormMessage>
+                                </FormItem>
+                                )}
+                            />
+                        )}
                         </div>
                     </div>
 
@@ -718,23 +686,46 @@ const DashboardUpdateSubmissionPage = () => {
                                     />
                                 </div>
 
-                                <FormField
-                                    control={form.control}
-                                    name={`moaIa.studentSnapshots.${index}.students`}
-                                    render={({ field }) => (
-                                        <FormItem className='text-start flex flex-col space-y-2'>
-                                            <FormLabel>Daftar Mahasiswa <span className="text-red-500">*</span></FormLabel>
-                                            <FormControl>
-                                                <StudentTagInput
-                                                    value={field.value}
-                                                    onChange={field.onChange}
-                                                    maxItems={3}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                {errorStudents ? (
+                                    <div className="text-red-500 text-sm">Gagal memuat daftar mahasiswa</div>
+                                ) : (
+                                    <FormField
+                                        control={form.control}
+                                        name={`moaIa.studentSnapshots.${index}.students`}
+                                        render={({ field }) => (
+                                            <FormItem className='text-start flex flex-col space-y-2'>
+                                                <FormLabel required>Daftar Mahasiswa</FormLabel>
+                                                <FormControl>
+                                                <div className="space-y-2">
+                                                    <MultiSelect
+                                                        values={studentInfoToNims(field.value)}
+                                                        onValuesChange={(nims) => {
+                                                            field.onChange(nimsToStudentInfo(nims, students?.data));
+                                                        }}
+                                                    >
+                                                        <MultiSelectTrigger 
+                                                            className="w-full"
+                                                            disabled={isLoadingStudents}
+                                                        >
+                                                            <MultiSelectValue placeholder={isLoadingStudents ? "Memuat mahasiswa..." : "Pilih mahasiswa..."} />
+                                                        </MultiSelectTrigger>
+                                                        <MultiSelectContent>
+                                                            <MultiSelectGroup>
+                                                                {students?.data.map((student) => (
+                                                                    <MultiSelectItem key={student.nim} value={student.nim}>
+                                                                        [{student.nim}] - {displayFullName(student.fullName)} 
+                                                                    </MultiSelectItem>
+                                                                ))}
+                                                            </MultiSelectGroup>
+                                                        </MultiSelectContent>
+                                                    </MultiSelect>
+                                                </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
 
                                 <div className="flex items-center gap-4">
                                     <Label className="text-sm text-gray-600">Total Mahasiswa:</Label>

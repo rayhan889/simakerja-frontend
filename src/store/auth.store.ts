@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { AuthState } from '@/types/auth.types';
+import type { AuthState, AuthUser } from '@/types/auth.types';
 import { authService } from '@/api/services/auth.service';
 
 export const useAuthStore = create<AuthState>()(
@@ -41,6 +41,19 @@ export const useAuthStore = create<AuthState>()(
                 } finally {
                     set({isLoading: false});
                 }
+            },
+
+            updateFields: (fields: Partial<AuthUser>) => {
+                const currentUser = get().user;
+
+                if (!currentUser) return;
+
+                set({
+                    user: {
+                        ...currentUser,
+                        ...fields
+                    }
+                });
             },
 
             loginWithGoogle: () => {
