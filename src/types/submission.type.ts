@@ -1,4 +1,4 @@
-import type { User } from "./user.type";
+import type { StudentInfo, User } from "./user.type";
 
 export type SubmissionType = 'moa_ia' | 'mou' | 'visit_request' | 'cooperation_request';
 
@@ -64,7 +64,7 @@ export interface SubmissionsByUserIdAndMoAIAType {
 
 export interface StudentSnapshotRequest {
     studyProgram: string;
-    students: Array<string>;
+    students: Array<StudentInfo>;
     unit: string;
 }
 

@@ -1,7 +1,7 @@
 import { userService } from "@/api/services/user.service";
 import { useAuthStore } from "@/store/auth.store";
 import type { UpdateStudentRequest } from "@/types/user.type";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const userKeys = {
     all: ["users"] as const,
@@ -21,10 +21,26 @@ export function useUpdateStudent(userId: string) {
                 queryKey: userKeys.studentDetails(userId),
             })
 
+            queryClient.invalidateQueries({
+                queryKey: userKeys.students(),
+            })
+
             if (response?.data) {
                 const { nim, studyProgram } = response.data;
                 useAuthStore.getState().updateFields({ nim, studyProgram })
             }
         }
+    })
+}
+
+export function useGetAllRegisteredStudents(excludeNim?: string) {
+    return useQuery({
+        queryKey: userKeys.students(),
+
+        queryFn: () => userService.getAllRegisteredStudents(excludeNim),
+
+        refetchOnWindowFocus: false,
+
+        retry: 1,
     })
 }

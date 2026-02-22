@@ -30,3 +30,9 @@ export interface UpdateStudentRequest {
     nim: string;
     studyProgram: string;
 }
+
+export interface StudentInfo {
+    fullName: string;
+    nim: string;
+    email: string;
+}

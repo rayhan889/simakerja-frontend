@@ -12,6 +12,7 @@ import {
 
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "react-router";
+import { displayFullName } from "@/lib/display-fullname";
 
 export const DashboardTopbar = () => {
     const { user } = useAuth();
@@ -21,7 +22,7 @@ export const DashboardTopbar = () => {
       <div>
         <h3 className="text-sm text-gray-600 text-start">
             Selamat datang kembali, <br />
-            <span className=" text-teal-950 font-semibold">{user?.fullName.replace(/^\d+_/, "")}</span>
+            <span className=" text-teal-950 font-semibold">{displayFullName(user?.fullName || "")}</span>
         </h3>
       </div>
 
