@@ -1,5 +1,5 @@
 import { useAuth, useHasRole } from "@/hooks/use-auth";
-import type { UserRole } from "@/types/auth.types";
+import type { UserRole } from "@/types/user.type";
 import { useLocation, Navigate } from "react-router";
 
 interface ProtectedRouteProps {

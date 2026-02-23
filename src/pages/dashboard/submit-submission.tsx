@@ -50,6 +50,9 @@ import { useGetAllRegisteredStudents } from '@/hooks/use-user';
 import type { StudentInfo } from '@/types/user.type';
 import { displayFullName } from '@/lib/display-fullname';
 import { useAuth } from '@/hooks/use-auth';
+import { FeatureGate } from '@/routes/guards/feature-gate';
+import { canCreateSubmission } from '@/policies/studentPolicies';
+import { FeatureBlockDialog } from '@/components/ui/feature-block-dialog';
 
 const FACULTY_OF_TECHNOLOGY = 'Teknik';
 const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
@@ -372,7 +375,13 @@ export const DashboardSubmitSubmissionPage = () => {
     }
 
   return (
-    <div className="w-full h-auto  flex flex-col items-start space-y-6">
+    <FeatureGate
+        check={canCreateSubmission}
+        fallback={(reason) => (
+            <FeatureBlockDialog reason={reason} redirectTo="/dashboard" />
+        )}
+    >
+        <div className="w-full h-auto  flex flex-col items-start space-y-6">
         
         <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -1010,5 +1019,6 @@ export const DashboardSubmitSubmissionPage = () => {
         </Form>
 
     </div>
+    </FeatureGate>
   )
 }

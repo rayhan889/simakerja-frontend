@@ -21,7 +21,7 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: (
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['student', 'staff']}>
                 <DashboardLayout />
             </ProtectedRoute>
         ),
