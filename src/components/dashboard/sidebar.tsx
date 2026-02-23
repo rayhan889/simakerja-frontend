@@ -11,6 +11,7 @@ import { Avatar } from "radix-ui";
 
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "react-router";
+import { displayFullName } from "@/lib/display-fullname";
 
 interface DashboardSidebarProps {
   collapsed: boolean
@@ -71,8 +72,8 @@ export const DashboardSidebar = ({
           </Avatar.Root>
           {!collapsed && (
             <div className="min-w-0 text-start text-white">
-              <p className="truncate text-sm font-medium ">
-                {user?.fullName.replace(/^\d+_/, "")}
+              <p className="truncate text-sm font-medium capitalize">
+                {displayFullName(user?.fullName || "")}
               </p>
               <p className="text-xs capitalize">
                 {user?.role === 'student' ? 'Mahasiswa' : user?.role === 'staff' ? 'Staf' : 'Admin'}

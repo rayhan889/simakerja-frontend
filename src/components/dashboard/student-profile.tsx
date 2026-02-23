@@ -25,7 +25,7 @@ export const DashboardStudentProfile = () => {
           </Avatar.Root>
 
           <div className='flex flex-col items-start gap-y-3'>
-            <h1 className='text-2xl font-bold'>{displayFullName(user?.fullName || "")}</h1>
+            <h1 className='text-2xl font-bold capitalize'>{displayFullName(user?.fullName || "")}</h1>
 
             <Badge variant={'outline'} className='border-gray-200'>
               {user?.role === 'student' ? 'Mahasiswa' : user?.role === 'staff' ? 'Staf' : 'Admin'}

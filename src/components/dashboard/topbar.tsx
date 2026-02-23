@@ -22,7 +22,7 @@ export const DashboardTopbar = () => {
       <div>
         <h3 className="text-sm text-gray-600 text-start">
             Selamat datang kembali, <br />
-            <span className=" text-teal-950 font-semibold">{displayFullName(user?.fullName || "")}</span>
+            <span className=" text-teal-950 font-semibold capitalize">{displayFullName(user?.fullName || "")}</span>
         </h3>
       </div>
 
