@@ -52,11 +52,11 @@ export function useMoaIASubmissions(params: QueryParams) {
     })
 }
 
-export function useSubmissionsByUserIdAndMoAIAType(params: QueryParams, userId: string) {
+export function useSubmissionsByUserIdAndMoAIAType(params: QueryParams, userId: string, nim?: string) {
     return useQuery({
         queryKey: submissionKeys.moaIaByUserList(params, userId),
 
-        queryFn: () => submissionService.getSubmissionsByUserIdAndMoAIAType(params, userId),
+        queryFn: () => submissionService.getSubmissionsByUserIdAndMoAIAType(params, userId, nim),
 
         placeholderData: keepPreviousData,
 

@@ -17,6 +17,7 @@ export const DashboardTrackSubmissionPage = () => {
   
   const { user } = useAuth();
     const userId = user?.id || "";
+    const isStudent = user?.role === 'student';
     const navigate = useNavigate();
   
     const [pagination, setPagination] = useState<PaginationState>({
@@ -47,7 +48,7 @@ export const DashboardTrackSubmissionPage = () => {
       isFetching,
       isError,
       error
-    } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId);
+    } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId, isStudent ? user?.nim : undefined);
   
     const tableData = data?.content ?? [];
     const totalItems = data?.totalElements ?? 0;
@@ -62,12 +63,25 @@ export const DashboardTrackSubmissionPage = () => {
         navigate(`/dashboard/submission/${submission.submissionId}/edit`);
     }, [navigate]);
 
+    const canEditSubmission = useCallback(
+      (submission: SubmissionsByUserIdAndMoAIAType) => {
+        if (!isStudent) return false;
+        if (submission.applicantId !== userId) return false;
+
+        return (
+          submission.status === "pending" || submission.status === "in_process"
+        );
+      },
+      [isStudent, userId]
+    );
+
     const columns = useMemo(
         () => getSubmissionByUserIdAndMoATypeColumns({
             onViewPdf: handleViewPdf,
             onEdit: handleEdit,
+            canEdit: canEditSubmission,
         }),
-        [handleViewPdf, handleEdit]
+        [handleViewPdf, handleEdit, canEditSubmission]
     );
   
       const handleSearchChange = useCallback((value: string) => {

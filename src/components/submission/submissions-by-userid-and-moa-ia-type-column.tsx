@@ -2,6 +2,7 @@ import type { ActivityType, MoAIASubmissionType, SubmissionsByUserIdAndMoAIAType
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "../ui/badge";
 import { Pencil, FileText } from "lucide-react";
+import { displayFullName } from "@/lib/display-fullname";
 
 
 const submissionByUserIdAndMoATypeColumnHelper = createColumnHelper<SubmissionsByUserIdAndMoAIAType>();
@@ -10,12 +11,37 @@ export interface SubmissionColumnOptions {
     onViewPdf?: (submissionId: string, partnerName: string) => void;
     onViewDetail?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
     onEdit?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
+    canEdit?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
+    isEditable?: boolean;
 }
 
 export function getSubmissionByUserIdAndMoATypeColumns(
     options: SubmissionColumnOptions = {}
 ): ColumnDef<SubmissionsByUserIdAndMoAIAType, never>[] {
     return [
+        submissionByUserIdAndMoATypeColumnHelper.accessor('applicantName', {
+            header: 'Nama Pengaju',
+            cell: (info) => {
+                const applicantName = displayFullName(info.getValue() as string);
+                const applicantNim = info.row.original.applicantNim;
+
+                return (
+                    <div className="max-w-50">
+                        <p 
+                            className="font-medium text-gray-900 truncate" 
+                            title={applicantName}
+                        >
+                            {applicantName}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            {applicantNim}
+                        </p>
+                    </div>
+                );
+            },
+            enableSorting: false, 
+        }),
+
         submissionByUserIdAndMoATypeColumnHelper.accessor('partnerName', {
             header: 'Nama Mitra',
             cell: (info) => {
@@ -23,7 +49,7 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                 const partnerNumber = info.row.original.partnerNumber;
 
                 return (
-                    <div className="max-w-[200px]">
+                    <div className="max-w-50">
                         <p 
                             className="font-medium text-gray-900 truncate" 
                             title={partnerName}
@@ -141,9 +167,11 @@ export function getSubmissionByUserIdAndMoATypeColumns(
             header: '',    
             cell: (info) => {
                 const submission = info.row.original;
-                const { submissionId, partnerName, status } = info.row.original;
+                const { submissionId, partnerName } = info.row.original;
 
-                const isEditable = status === 'pending' || status === 'in_process';
+                const canEdit = options.canEdit
+                ? options.canEdit(submission)
+                : !!options.isEditable;
 
                 return (
                     <div className="flex items-center gap-1">
@@ -154,15 +182,20 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                         >
                             <FileText className="h-4 w-4" />
                         </button>
+
                         <button
-                            onClick={() => isEditable && options.onEdit?.(submission)}
-                            disabled={!isEditable}
+                            onClick={() => canEdit && options.onEdit?.(submission)}
+                            disabled={!canEdit}
                             className={`rounded-full p-2 transition-colors ${
-                                isEditable 
-                                    ? 'cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-600' 
-                                    : 'cursor-not-allowed text-gray-300 opacity-50'
+                                canEdit
+                                ? "cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                : "cursor-not-allowed text-gray-300 opacity-50"
                             }`}
-                            title={isEditable ? "Edit Dokumen" : "Tidak dapat diedit (status bukan pending/dalam proses)"}
+                            title={
+                                canEdit
+                                ? "Edit Dokumen"
+                                : "Tidak dapat diedit (status bukan pending/dalam proses atau bukan pemilik)"
+                            }
                         >
                             <Pencil className="h-4 w-4" />
                         </button>
