@@ -7,11 +7,13 @@ import { DataTableSearch } from '../data-table/data-table-search'
 import { useAuth } from '@/hooks/use-auth'
 import { getSubmissionByUserIdAndMoATypeColumns } from '../submission/submissions-by-userid-and-moa-ia-type-column';
 import { PDFViewerDialog } from '../submission/pdf-viewer-dialog'
+import type { SubmissionsByUserIdAndMoAIAType } from '@/types/submission.type'
 
 export const DashboardSubmissionHistory = () => {
 
   const { user } = useAuth();
   const userId = user?.id || "";
+  const isStudent = user?.role === 'student';
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -35,7 +37,7 @@ export const DashboardSubmissionHistory = () => {
     isFetching,
     isError,
     error
-  } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId);
+  } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId, isStudent ? user?.nim : undefined);
 
   const tableData = data?.content ?? [];
   const totalItems = data?.totalElements ?? 0;
@@ -52,11 +54,24 @@ export const DashboardSubmissionHistory = () => {
       setPdfDialogOpen(true);
   }, []);
 
+  const canEditSubmission = useCallback(
+    (submission: SubmissionsByUserIdAndMoAIAType) => {
+      if (!isStudent) return false;
+      if (submission.applicantId !== userId) return false;
+
+      return (
+        submission.status === "pending" || submission.status === "in_process"
+      );
+    },
+    [isStudent, userId]
+  );
+
   const columns = useMemo(
       () => getSubmissionByUserIdAndMoATypeColumns({
           onViewPdf: handleViewPdf,
+          canEdit: canEditSubmission,
       }),
-      [handleViewPdf]
+      [handleViewPdf, canEditSubmission]
   );
 
     const handleSearchChange = useCallback((value: string) => {

@@ -59,6 +59,7 @@ export const submissionService = {
     getSubmissionsByUserIdAndMoAIAType: async (
       params: QueryParams,
       userId: string,
+      nim?: string
     ): Promise<PaginationResponese<SubmissionsByUserIdAndMoAIAType> | null>  => {
       try {
         const response = await apiClient.get<ApiResponse<PaginationResponese<SubmissionsByUserIdAndMoAIAType>>>(
@@ -69,6 +70,7 @@ export const submissionService = {
                     size: params.size,
                     ...(params.sort && { sort: params.sort }),
                     ...(params.search && { search: params.search }),
+                    ...(nim && { nim }),
                 }
             }
         );

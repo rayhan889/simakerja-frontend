@@ -52,6 +52,9 @@ export interface StudentSnapshot {
 }
 
 export interface SubmissionsByUserIdAndMoAIAType {
+    applicantId: string;
+    applicantName: string;
+    applicantNim: string;
     submissionId: string;
     partnerName: string;
     partnerNumber: string;

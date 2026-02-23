@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { studyProgramOptions } from "@/types/submission.type";
+import { displayFullName } from "@/lib/display-fullname";
 
 const updateStudentSchema = z.object({
     nim: z
@@ -124,7 +125,7 @@ const DashboardUpdateUserPage = () => {
                     }
                     </Badge>
 
-                    <h1 className='font-semibold'>{user?.fullName.replace(/^\d+_/, "")}</h1>
+                    <h1 className='font-semibold capitalize'>{displayFullName(user?.fullName || "")}</h1>
 
                     <span className="text-sm text-gray-600 flex items-center gap-2">
                         {user?.email} 

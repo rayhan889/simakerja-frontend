@@ -41,6 +41,7 @@ import {
 import { useGetAllRegisteredStudents } from '@/hooks/use-user';
 import type { StudentInfo } from '@/types/user.type';
 import { displayFullName } from '@/lib/display-fullname';
+import { useAuth } from '@/hooks/use-auth';
 
 const studentInfoSchema = z.object({
     fullName: z.string({ error: "Nama lengkap mahasiswa harus diisi" })
@@ -146,6 +147,9 @@ const DashboardUpdateSubmissionPage = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
     const navigate = useNavigate();
 
+    const { user } = useAuth();
+    const isValidStudent = user?.role === 'student' && user?.nim && user?.studyProgram;
+
     const { 
         data: submissionResponse, 
         isLoading: isLoadingSubmission,
@@ -159,7 +163,7 @@ const DashboardUpdateSubmissionPage = () => {
         data: students, 
         isLoading: isLoadingStudents,
         error: errorStudents,
-    }  = useGetAllRegisteredStudents()
+    }  = useGetAllRegisteredStudents(isValidStudent ? user?.nim : undefined);
 
     const submissionDetails = submissionResponse?.data;
     const moaIaDetails = submissionDetails?.moaIa ?? null;
