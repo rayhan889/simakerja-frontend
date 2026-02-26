@@ -117,8 +117,8 @@ export const DashboardSubmissionHistory = () => {
     <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Riwayat Pengajuan MoA dan IA
+          <h1 className="text-lg font-semibold text-gray-900">
+              Riwayat Pengajuan MoA & IA
           </h1>
         </div>
         
@@ -182,7 +182,6 @@ export const DashboardSubmissionHistory = () => {
 
       <PDFViewerDialog
           submissionId={selectedSubmission?.id ?? null}
-          partnerName={selectedSubmission?.partnerName}
           open={pdfDialogOpen}
           onOpenChange={setPdfDialogOpen}
       />

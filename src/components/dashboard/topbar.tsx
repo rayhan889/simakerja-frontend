@@ -44,6 +44,7 @@ export const DashboardTopbar = () => {
               <Avatar.Image
                 src={user?.profilePicture}
                 alt={user?.fullName}
+                referrerPolicy="no-referrer"
                 className="rounded-full"
               />
             <Avatar.Fallback className="bg-primary text-primary-foreground text-xs font-bold">

@@ -68,7 +68,7 @@ export const DashboardSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-teal-950 text-sidebar-foreground transition-all duration-300",
+        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-teal-950 text-sidebar-foreground transition-all duration-300 border-r border-gray-600",
         collapsed ? "w-[72px]" : "w-64",
       )}
     >
@@ -92,6 +92,7 @@ export const DashboardSidebar = ({
             <Avatar.Image
               src={user?.profilePicture}
               alt={user?.fullName}
+              referrerPolicy="no-referrer"
               className="rounded-full"
             />
             <Avatar.Fallback className="bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
