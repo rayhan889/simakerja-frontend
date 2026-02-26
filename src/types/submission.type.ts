@@ -73,7 +73,7 @@ export interface StudentSnapshotRequest {
 
 export interface MoaIaDetails {
     partnerName: string;
-    partnerNumber: string;
+    partnerNumber?: string;
     facultyRepresentativeName: string;
     partnerRepresentativeName: string;
     partnerRepresentativePosition: string;
@@ -82,6 +82,7 @@ export interface MoaIaDetails {
     studentSnapshots: Array<StudentSnapshotRequest>;
     partnerAddress: string;
     partnerLogoKey: string;
+    partnerCooperationPeriod: number;
 }
 
 export interface CreateMoAIASubmissionRequest {
@@ -164,4 +165,12 @@ export const studyProgramOptions = [
   { value: 'pendidikan_teknologi_informasi', label: 'Pendidikan Teknologi Informasi' },
 ];
 
+export const partnerCooperationPeriodOptions = [
+  { value: 1, label: '1 Tahun' },
+  { value: 3, label: '3 Tahun' },
+  { value: 5, label: '5 Tahun' },
+  { value: 7, label: '7 Tahun' },
+];
+
 export type StudyProgram = typeof studyProgramOptions[number]['value'];
+export type PartnerCooperationPeriod = typeof partnerCooperationPeriodOptions[number]['value'];

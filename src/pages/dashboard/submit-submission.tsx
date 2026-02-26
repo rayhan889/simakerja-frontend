@@ -1,6 +1,6 @@
 import { Info, BookText, User, Trash2, Plus, Loader2, UploadCloud } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateSubmission, usePartners } from '@/hooks/use-submission';
@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from '@/components/ui/input';
-import { activityLabels, documentTypeLabels, studyProgramOptions, type PartnerAndFacultyProfile } from '@/types/submission.type';
+import { activityLabels, documentTypeLabels, partnerCooperationPeriodOptions, studyProgramOptions, type PartnerAndFacultyProfile, type StudyProgram } from '@/types/submission.type';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useUploadPartnerLogo } from '@/hooks/use-file-upload';
@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/multi-select"
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { trigramSimilarity } from '@/lib/trigram';
-import { useGetAllRegisteredStudents } from '@/hooks/use-user';
+import { useGetAllRegisteredFilteredStudents } from '@/hooks/use-user';
 import type { StudentInfo } from '@/types/user.type';
 import { displayFullName } from '@/lib/display-fullname';
 import { useAuth } from '@/hooks/use-auth';
@@ -56,6 +56,7 @@ import { FeatureBlockDialog } from '@/components/ui/feature-block-dialog';
 
 const FACULTY_OF_TECHNOLOGY = 'Teknik';
 const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
+const FACULTY_REPRESENTATIVE_NAME = 'Prof. Dr. Suparji, S.Pd., M.Pd.';
 
 const studentInfoSchema = z.object({
     fullName: z.string({ error: "Nama lengkap mahasiswa harus diisi" })
@@ -88,9 +89,12 @@ const moaIaDetailSchema = z.object({
         .max(255, "Nama mitra maksimal 255 karakter"),
     
     partnerNumber: z
-        .string({ error: "Nomor mitra harus diisi" })
-        .min(1, "Nomor mitra harus diisi")
-        .max(50, "Nomor mitra maksimal 50 karakter"),
+        .string()
+        .min(3, "Nomor mitra minimal 3 karakter")
+        .max(50, "Nomor mitra maksimal 50 karakter")
+        .regex(/^\d+$/, "Nomor mitra hanya boleh berisi angka")
+        .optional()
+        .or(z.literal("")),
 
     partnerAddress: z.string({ error: "Alamat mitra harus diisi" })
         .min(1, "Alamat mitra harus diisi")
@@ -98,10 +102,7 @@ const moaIaDetailSchema = z.object({
 
     partnerLogoKey: z.string({ error: "Logo mitra harus diunggah" }).min(1, "Logo mitra harus diunggah"),
     
-    facultyRepresentativeName: z
-        .string({ error: "Nama perwakilan fakultas harus diisi" })
-        .min(1, "Nama perwakilan fakultas harus diisi")
-        .max(255, "Nama perwakilan fakultas maksimal 255 karakter"),
+    facultyRepresentativeName: z.literal(FACULTY_REPRESENTATIVE_NAME),
     
     partnerRepresentativeName: z
         .string({ error: "Nama perwakilan mitra harus diisi" })
@@ -117,6 +118,10 @@ const moaIaDetailSchema = z.object({
         ['internship', 'study_independent', 'kkn', 'research', 'community_service'],
         { error: "Tipe aktivitas harus dipilih" }
     ),
+
+    partnerCooperationPeriod: z.number({ error: "Periode kerja sama harus diisi" })
+        .min(1, "Periode kerja sama minimal 1 tahun")
+        .max(7, "Periode kerja sama maksimal 7 tahun"),
     
     studentSnapshots: z
         .array(studentSnapshotSchema)
@@ -124,6 +129,8 @@ const moaIaDetailSchema = z.object({
         .superRefine((snapshots, ctx) => {
             const seenCombinations = new Set<string>();
             const duplicateIndices: number[] = [];
+            const seenStudentNims = new Set<string>();
+            const duplicateStudentNims: string[] = [];
             
             for (let i = 0; i < snapshots.length; i++) {
                 const snapshot = snapshots[i];
@@ -139,12 +146,28 @@ const moaIaDetailSchema = z.object({
                 } else {
                     seenCombinations.add(compositeKey);
                 }
+
+                for (const student of snapshot.students) {
+                    if (seenStudentNims.has(student.nim)) {
+                        duplicateStudentNims.push(student.nim);
+                    } else {
+                        seenStudentNims.add(student.nim);
+                    }
+                }
             }
             
             if (duplicateIndices.length > 0) {
                 ctx.addIssue({
                     code: 'custom',
                     message: "Kombinasi Program Studi dan Unit/Departemen tidak boleh sama antar grup mahasiswa. Setiap grup harus memiliki kombinasi yang unik.",
+                    path: [],
+                });
+            }
+
+            if (duplicateStudentNims.length > 0) {
+                ctx.addIssue({
+                    code: 'custom',
+                    message: `NIM ${duplicateStudentNims.join(', ')} sudah digunakan di grup mahasiswa lain. Setiap mahasiswa hanya boleh muncul di satu grup.`,
                     path: [],
                 });
             }
@@ -169,40 +192,71 @@ const submissionFormSchema = z.object({
 
 type SubmissionFormValues = z.infer<typeof submissionFormSchema>;
 
-const defaultValues: SubmissionFormValues = {
-    submissionType: 'moa_ia',
-    notes: '',
-    faculty: FACULTY_OF_TECHNOLOGY,
-    facultyAddress: FACULTY_OF_TECHNOLOGY_ADDRESS,
-    moaIa: {
-        documentType: 'moa',
-        partnerName: '',
-        partnerNumber: '',
-        partnerAddress: '',
-        partnerLogoKey: '',
-        facultyRepresentativeName: '',
-        partnerRepresentativeName: '',
-        partnerRepresentativePosition: '',
-        activityType: 'internship',
-        studentSnapshots: [
-        {
-            studyProgram: '',
-            students: [],
-            unit: '',
+// const defaultValues: SubmissionFormValues = {
+//     submissionType: 'moa_ia',
+//     notes: '',
+//     faculty: FACULTY_OF_TECHNOLOGY,
+//     facultyAddress: FACULTY_OF_TECHNOLOGY_ADDRESS,
+//     moaIa: {
+//         documentType: 'moa',
+//         partnerName: '',
+//         partnerNumber: '',
+//         partnerAddress: '',
+//         partnerLogoKey: '',
+//         facultyRepresentativeName: FACULTY_REPRESENTATIVE_NAME,
+//         partnerRepresentativeName: '',
+//         partnerRepresentativePosition: '',
+//         partnerCooperationPeriod: 1,
+//         activityType: 'internship',
+//         studentSnapshots: [
+//         {
+//             studyProgram: '',
+//             students: [],
+//             unit: '',
+//         },
+//     ],
+//     },
+// };
+
+const buildDefaultValues = (userStudyProgram?: string): SubmissionFormValues => {
+   return {
+        submissionType: 'moa_ia',
+        notes: '',
+        faculty: FACULTY_OF_TECHNOLOGY,
+        facultyAddress: FACULTY_OF_TECHNOLOGY_ADDRESS,
+        moaIa: {
+            documentType: 'moa',
+            partnerName: '',
+            partnerNumber: '',
+            partnerAddress: '',
+            partnerLogoKey: '',
+            facultyRepresentativeName: FACULTY_REPRESENTATIVE_NAME,
+            partnerRepresentativeName: '',
+            partnerRepresentativePosition: '',
+            partnerCooperationPeriod: 1,
+            activityType: 'internship',
+            studentSnapshots: [
+            {
+                studyProgram: userStudyProgram ?? '',
+                students: [],
+                unit: '',
+            },
+        ],
         },
-    ],
-    },
-};
+    };
+}
 
 export const DashboardSubmitSubmissionPage = () => {
-    const form = useForm<SubmissionFormValues>({
-        resolver: zodResolver(submissionFormSchema),
-        defaultValues,
-        mode: 'onChange'
-    })
-
     const { user } = useAuth();
     const isValidStudent = user?.role === 'student' && user?.nim && user?.studyProgram;
+    const userStudyProgram = isValidStudent ? user.studyProgram : undefined;
+    const userNim = isValidStudent ? user.nim : undefined;
+
+    const form = useForm<SubmissionFormValues>({
+        resolver: zodResolver(submissionFormSchema),
+        defaultValues: buildDefaultValues(userStudyProgram),
+        mode: 'onChange'
+    })
 
     const { fields, append, remove } = useFieldArray({
         control: form.control,
@@ -227,13 +281,36 @@ export const DashboardSubmitSubmissionPage = () => {
         error: errorPartners,
     } = usePartners();
 
-    const { 
-        data: students, 
-        isLoading: isLoadingStudents,
-        error: errorStudents,
-    }  = useGetAllRegisteredStudents(isValidStudent ? user.nim : undefined);
+    const studentSnapshots = useWatch({
+        control: form.control,
+        name: 'moaIa.studentSnapshots',
+    })
 
-    const isValidStudentAvaliable = students?.data && students?.data.length > 0;
+    const filteredStudentsQueries = useGetAllRegisteredFilteredStudents(undefined, studentSnapshots);
+
+    useEffect(() => {
+        if (!isValidStudent) return;
+
+        const firstQuery = filteredStudentsQueries[0];
+        const studentsData = firstQuery?.data?.data;
+
+        if (!studentsData) return;
+
+        const authStudentInfo = studentsData.find(s => s.nim === userNim);
+        console.log('current auth student info' + authStudentInfo?.fullName)
+
+        if (!authStudentInfo) return;
+
+        const currentStudents = form.getValues('moaIa.studentSnapshots.0.students') || [];
+        if (currentStudents.some(s => s.nim === userNim)) return;
+
+        form.setValue(
+            'moaIa.studentSnapshots.0.students',
+            [authStudentInfo, ...currentStudents],
+            { shouldDirty: true }
+        );
+    }, [isValidStudent, userNim, filteredStudentsQueries, form]);
+    
 
     const formPartnerName = form.watch('moaIa.partnerName');
     const formPartnerNumber = form.watch('moaIa.partnerNumber');
@@ -282,7 +359,6 @@ export const DashboardSubmitSubmissionPage = () => {
         form.setValue('moaIa.partnerRepresentativePosition', partner.partnerRepresentativePosition, { shouldDirty: true });
         form.setValue('moaIa.activityType', partner.activityType, { shouldDirty: true });
         form.setValue('moaIa.partnerLogoKey', partner.partnerLogoKey, { shouldDirty: true });
-        form.setValue('moaIa.facultyRepresentativeName', partner.facultyRepresentativeName, { shouldDirty: true });
 
         setPartnerLogoPreviewUrl(null);
     }, [partners, form])
@@ -297,7 +373,6 @@ export const DashboardSubmitSubmissionPage = () => {
         form.setValue('moaIa.partnerRepresentativePosition', '', { shouldDirty: true });
         form.setValue('moaIa.activityType', 'internship', { shouldDirty: true });
         form.setValue('moaIa.partnerLogoKey', '', { shouldDirty: true });
-        form.setValue('moaIa.facultyRepresentativeName', '', { shouldDirty: true });
 
         setSelectedPartner(null);
 
@@ -346,7 +421,7 @@ export const DashboardSubmitSubmissionPage = () => {
     }
 
     const handleReset = () => {
-        form.reset(defaultValues);
+        form.reset(buildDefaultValues(userStudyProgram));
         setPartnerLogoPreviewUrl(null);
 
         setPartnerMode('existing');
@@ -566,61 +641,60 @@ export const DashboardSubmitSubmissionPage = () => {
                                         </FormItem>
                                     )}
                                 />
-
-                                <FormField
-                                    control={form.control}
-                                    name="moaIa.partnerName"
-                                    render={({ field }) => (
-                                    <FormItem className='text-start flex flex-col space-y-2 col-span-4'>
-                                        <FormLabel required>Nama Mitra</FormLabel>
-                                        <FormControl>
-                                            {partnerMode === 'existing' ? (
-                                                <Combobox
-                                                    value={field.value}
-                                                    onValueChange={(value) => {
-                                                        field.onChange(value);
-                                                        if (value) {
-                                                            handlePartnerSelect(value);
-                                                        } else {
-                                                            setSelectedPartner(null);
-                                                        }
-                                                    }}
-                                                    items={partners?.data.map(partner => partner.partnerName) ?? []}
-                                                >
-                                                    <ComboboxInput 
-                                                        placeholder={isLoadingPartners ? "Memuat mitra..." : "Pilih Mitra"}
-                                                        disabled={isLoadingPartners}
-                                                        showClear
-                                                    />
-                                                    <ComboboxContent>
-                                                        <ComboboxEmpty>
-                                                            {errorPartners 
-                                                                ? "Gagal memuat daftar mitra." 
-                                                                : "Mitra tidak ditemukan."}
-                                                        </ComboboxEmpty>
-                                                        <ComboboxList>
-                                                            {(item) => (
-                                                                <ComboboxItem key={item} value={item}>
-                                                                    {item}
-                                                                </ComboboxItem>
-                                                            )}
-                                                        </ComboboxList>
-                                                    </ComboboxContent>
-                                                </Combobox>
-                                            ) : (
-                                                <Input
-                                                    {...field}
-                                                    placeholder="PT Telkom Indonesia"
-                                                />
-                                            )}
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
                         </div>
 
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 w-full'>
+                    <div className='grid grid-cols-1 md:grid-cols-4 gap-3 w-full'>
+                        <FormField
+                            control={form.control}
+                            name="moaIa.partnerName"
+                            render={({ field }) => (
+                            <FormItem className='text-start flex flex-col space-y-2'>
+                                <FormLabel required>Nama Mitra</FormLabel>
+                                <FormControl>
+                                    {partnerMode === 'existing' ? (
+                                        <Combobox
+                                            value={field.value}
+                                            onValueChange={(value) => {
+                                                field.onChange(value);
+                                                if (value) {
+                                                    handlePartnerSelect(value);
+                                                } else {
+                                                    setSelectedPartner(null);
+                                                }
+                                            }}
+                                            items={partners?.data.map(partner => partner.partnerName) ?? []}
+                                        >
+                                            <ComboboxInput 
+                                                placeholder={isLoadingPartners ? "Memuat mitra..." : "Pilih Mitra"}
+                                                disabled={isLoadingPartners}
+                                                showClear
+                                            />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>
+                                                    {errorPartners 
+                                                        ? "Gagal memuat daftar mitra." 
+                                                        : "Mitra tidak ditemukan."}
+                                                </ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(item) => (
+                                                        <ComboboxItem key={item} value={item}>
+                                                            {item}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    ) : (
+                                        <Input
+                                            {...field}
+                                            placeholder="PT Telkom Indonesia"
+                                        />
+                                    )}
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
 
                         <FormField
                             control={form.control}
@@ -631,8 +705,8 @@ export const DashboardSubmitSubmissionPage = () => {
                                 <FormControl>
                                 <Input
                                     {...field}
-                                    placeholder="Prof. Dr. Tony Stark S.Pd M.Pd"
-                                    disabled={isPartnerFieldDisabled}
+                                    placeholder={FACULTY_REPRESENTATIVE_NAME}
+                                    disabled
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -663,7 +737,7 @@ export const DashboardSubmitSubmissionPage = () => {
                             name="moaIa.partnerNumber"
                             render={({ field }) => (
                             <FormItem className='text-start flex flex-col space-y-2'>
-                                <FormLabel required>Nomor Mitra</FormLabel>
+                                <FormLabel>Nomor Mitra</FormLabel>
                                 <FormControl>
                                 <Input
                                     {...field}
@@ -745,12 +819,52 @@ export const DashboardSubmitSubmissionPage = () => {
                             )}
                         />
 
+                        <FormField
+                            control={form.control}
+                            name="moaIa.partnerCooperationPeriod"
+                            render={({ field }) => (
+                            <FormItem className='text-start flex flex-col space-y-2'>
+                                <FormLabel required>Periode Kerja Sama</FormLabel>
+                                <FormControl>
+                                    <Select
+                                        name={field.name}
+                                        value={
+                                            field.value !== null && field.value !== undefined
+                                            ? String(field.value)
+                                            : undefined
+                                        }
+                                        onValueChange={(val) => field.onChange(Number(val))}
+                                        disabled={isPartnerFieldDisabled}
+                                    >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Pilih Periode Kerja Sama" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                        <SelectLabel>Periode Kerja Sama</SelectLabel>
+                                        {partnerCooperationPeriodOptions.map(({ label, value }) => (
+                                            <SelectItem
+                                                key={`period-${value}`}
+                                                value={String(value)}
+                                            >
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+
                         {partnerMode === 'new' && (
                             <FormField
                                 control={form.control}
                                 name="moaIa.partnerLogoKey"
                                 render={() => (
-                                <FormItem className='text-start flex flex-col space-y-2 col-span-3'>
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-4'>
                                     <FormLabel required>Logo Mitra</FormLabel>
                                     {partnerLogoPreviewUrl ? (
                                         <div className='w-full border border-gray-200 max-h-60 overflow-hidden relative rounded-md bg-transparent p-3'>
@@ -838,136 +952,167 @@ export const DashboardSubmitSubmissionPage = () => {
                     </div>
 
                     <div className="w-full space-y-6">
-                        {fields.map((field, index) => (
-                            <div 
-                            key={field.id} 
-                            className="relative border border-gray-200 rounded-lg p-4 space-y-4"
-                            >
-                            <div className="flex items-center justify-between">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
-                                Group #{index + 1}
-                                </span>
-                                
-                                {fields.length > 1 && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => remove(index)}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                        {fields.map((field, index) => {
+                            const queryForThisGroup = filteredStudentsQueries[index];
+                            const studentsData = queryForThisGroup?.data;
+                            const isLoadingStudents = queryForThisGroup?.isLoading;
+                            const errorStudents = queryForThisGroup?.error;
+                            const currentStudyProgram = studentSnapshots?.[index]?.studyProgram as
+                            | StudyProgram
+                            | undefined;
+
+                            const isValidStudentsAvailable =
+                            !!studentsData?.data && studentsData.data.length > 0;
+                            return (
+                                <div 
+                                    key={field.id} 
+                                    className="relative border border-gray-200 rounded-lg p-4 space-y-4"
                                 >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                                )}
-                            </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                                    Group #{index + 1}
+                                    </span>
+                                    
+                                    {fields.length > 1 && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => remove(index)}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    )}
+                                </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                control={form.control}
-                                name={`moaIa.studentSnapshots.${index}.studyProgram`}
-                                render={({ field }) => (
-                                    <FormItem className='text-start flex flex-col space-y-2'>
-                                    <FormLabel required>Program Studi</FormLabel>
-                                    <FormControl>
-                                        <Select
-                                            name={field.name}
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Program Studi" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    <SelectLabel>Program Studi</SelectLabel>
-                                                    {studyProgramOptions.map((option) => (
-                                                        <SelectItem key={option.value} value={option.value}>
-                                                        {option.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-
-                                <FormField
-                                control={form.control}
-                                name={`moaIa.studentSnapshots.${index}.unit`}
-                                render={({ field }) => (
-                                    <FormItem className='text-start flex flex-col space-y-2'>
-                                    <FormLabel required>Unit / Departemen</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                        {...field}
-                                        placeholder="Tech Department"
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                            </div>
-
-                            {errorStudents ? (
-                                <div className="text-red-500 text-sm">Gagal memuat daftar mahasiswa</div>
-                            ) : (
-                                <FormField
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
                                     control={form.control}
-                                    name={`moaIa.studentSnapshots.${index}.students`}
+                                    name={`moaIa.studentSnapshots.${index}.studyProgram`}
                                     render={({ field }) => (
                                         <FormItem className='text-start flex flex-col space-y-2'>
+                                        <FormLabel required>Program Studi</FormLabel>
+                                        <FormControl>
+                                            <Select
+                                                name={field.name}
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Program Studi" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        <SelectLabel>Program Studi</SelectLabel>
+                                                        {studyProgramOptions.map((option) => (
+                                                            <SelectItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+
+                                    <FormField
+                                    control={form.control}
+                                    name={`moaIa.studentSnapshots.${index}.unit`}
+                                    render={({ field }) => (
+                                        <FormItem className='text-start flex flex-col space-y-2'>
+                                        <FormLabel required>Unit / Departemen</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                            {...field}
+                                            placeholder="Tech Department"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                </div>
+
+                                {errorStudents ? (
+                                    <div className="text-red-500 text-sm">Gagal memuat daftar mahasiswa</div>
+                                ) : (
+                                    <FormField
+                                        control={form.control}
+                                        name={`moaIa.studentSnapshots.${index}.students`}
+                                        render={({ field }) => (
+                                        <FormItem className="text-start flex flex-col space-y-2">
                                             <FormLabel required>Daftar Mahasiswa</FormLabel>
                                             <FormControl>
                                             <div className="space-y-2">
                                                 <MultiSelect
                                                     values={studentInfoToNims(field.value)}
                                                     onValuesChange={(nims) => {
-                                                        field.onChange(nimsToStudentInfo(nims, students?.data));
+                                                        let nextNims = nims;
+
+                                                        if (index === 0 && userNim) {
+                                                            if (!nextNims.includes(userNim)) {
+                                                                nextNims = [...nextNims, userNim];
+                                                            }
+                                                        }
+                                                        
+                                                        const studentsList = filteredStudentsQueries[index]?.data?.data;
+                                                        field.onChange(nimsToStudentInfo(nextNims, studentsList));
                                                     }}
                                                 >
-                                                    <MultiSelectTrigger 
-                                                        className="w-full"
-                                                        disabled={isLoadingStudents || !isValidStudentAvaliable}
-                                                    >
-                                                        <MultiSelectValue 
-                                                            placeholder={
-                                                                isLoadingStudents ? "Memuat mahasiswa..." : 
-                                                                isValidStudentAvaliable ? "Pilih mahasiswa" : "Tidak ada mahasiswa yang terdaftar"
-                                                            } 
-                                                        />
-                                                    </MultiSelectTrigger>
-                                                    {isValidStudentAvaliable && (
-                                                        <MultiSelectContent>
-                                                        <MultiSelectGroup>
-                                                            {students?.data.map((student) => (
-                                                                <MultiSelectItem key={student.nim} value={student.nim}>
-                                                                    [{student.nim}] - {displayFullName(student.fullName)} 
-                                                                </MultiSelectItem>
-                                                            ))}
-                                                        </MultiSelectGroup>
+                                                <MultiSelectTrigger
+                                                    className="w-full"
+                                                    disabled={
+                                                    !currentStudyProgram ||
+                                                    isLoadingStudents ||
+                                                    !isValidStudentsAvailable
+                                                    }
+                                                >
+                                                    <MultiSelectValue
+                                                    placeholder={
+                                                        !currentStudyProgram
+                                                        ? 'Pilih program studi terlebih dahulu'
+                                                        : isLoadingStudents
+                                                        ? 'Memuat mahasiswa...'
+                                                        : isValidStudentsAvailable
+                                                        ? 'Pilih mahasiswa'
+                                                        : 'Tidak ada mahasiswa yang terdaftar untuk program studi ini'
+                                                    }
+                                                    />
+                                                </MultiSelectTrigger>
+
+                                                {isValidStudentsAvailable && (
+                                                    <MultiSelectContent>
+                                                    <MultiSelectGroup>
+                                                        {studentsData?.data.map((student) => (
+                                                        <MultiSelectItem key={student.nim} value={student.nim} disabled={index === 0 && student.nim === userNim}>
+                                                            [{student.nim}] - {displayFullName(student.fullName)}
+                                                        </MultiSelectItem>
+                                                        ))}
+                                                    </MultiSelectGroup>
                                                     </MultiSelectContent>
-                                                    )}
+                                                )}
                                                 </MultiSelect>
                                             </div>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
-                                    )}
-                                />
-                            )}
+                                        )}
+                                    />
+                                )}
 
-                            <div className="flex items-center gap-4">
-                                <Label className="text-sm text-gray-600">Total Mahasiswa:</Label>
-                                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-teal-100 text-teal-800">
-                                {form.watch(`moaIa.studentSnapshots.${index}.students`)?.length || 0}
-                                </span>
-                            </div>
-                            </div>
-                        ))}
+                                <div className="flex items-center gap-4">
+                                    <Label className="text-sm text-gray-600">Total Mahasiswa:</Label>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-teal-100 text-teal-800">
+                                    {form.watch(`moaIa.studentSnapshots.${index}.students`)?.length || 0}
+                                    </span>
+                                </div>
+                                </div>
+                            )
+                        })}
 
                         <Button
                             type="button"
