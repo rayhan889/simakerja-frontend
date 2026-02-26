@@ -2,6 +2,7 @@ import type { ApiResponse } from "@/types/auth.types";
 import type { Student, StudentInfo, UpdateStudentRequest } from "@/types/user.type";
 import { AxiosError } from "axios";
 import { apiClient } from "../client";
+import type { StudyProgram } from "@/types/submission.type";
 
 export const userService = {
 
@@ -29,7 +30,8 @@ export const userService = {
     },
 
     getAllRegisteredStudents: async (
-        excludeNim?: string
+        excludeNim?: string,
+        studyProgram?: StudyProgram
     ): Promise<ApiResponse<StudentInfo[]> | null> => {
         try {
             const response = await apiClient.get<ApiResponse<StudentInfo[]>>(
@@ -37,6 +39,7 @@ export const userService = {
                 {
                     params: {
                         exclude_nim: excludeNim,
+                        study_program: studyProgram,
                     }
                 }
             );
