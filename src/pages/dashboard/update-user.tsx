@@ -105,7 +105,7 @@ const DashboardUpdateUserPage = () => {
             </h1>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 font-secondary">
+        <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 ">
             <div className="flex items-center gap-x-5 h-auto ">
                 <Avatar.Root className="h-20 w-20 shrink-0">
                     <Avatar.Image
@@ -135,7 +135,7 @@ const DashboardUpdateUserPage = () => {
             </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 font-secondary space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5  space-y-6">
             <div className=" flex items-center justify-between w-full">
                 <h3 className="text-lg font-semibold text-gray-900">
                     Informasi Mahasiswa

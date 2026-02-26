@@ -68,7 +68,7 @@ export const DashboardSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-teal-950 text-sidebar-foreground transition-all duration-300",
+        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-teal-950 text-sidebar-foreground transition-all duration-300 border-r border-gray-600",
         collapsed ? "w-[72px]" : "w-64",
       )}
     >
@@ -83,7 +83,7 @@ export const DashboardSidebar = ({
 
       <div
         className={cn(
-          "border-b border-gray-600 px-4 py-4 font-secondary",
+          "border-b border-gray-600 px-4 py-4 ",
           collapsed ? "flex justify-center" : "",
         )}
       >
@@ -92,6 +92,7 @@ export const DashboardSidebar = ({
             <Avatar.Image
               src={user?.profilePicture}
               alt={user?.fullName}
+              referrerPolicy="no-referrer"
               className="rounded-full"
             />
             <Avatar.Fallback className="bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
@@ -111,7 +112,7 @@ export const DashboardSidebar = ({
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 font-secondary">
+      <nav className="flex-1 px-3 py-4 ">
         <ul className="flex flex-col gap-2">
           {updatedNavItems.map((item) => (
             <li key={item.label}>

@@ -173,7 +173,7 @@ export const DashboardTrackSubmissionPage = () => {
           <Link
             to='/dashboard/submit-submission'
             className={
-              cn(buttonVariants({ size: 'lg' }), 'cursor-pointer bg-teal-950 text-white flex items-center hover:bg-teal-800 font-secondary')}
+              cn(buttonVariants({ size: 'lg' }), 'cursor-pointer bg-teal-950 text-white flex items-center hover:bg-teal-800 ')}
           >
             <Send className="mr-2 h-4 w-4" /> 
             <span className="font-medium">Ajukan Dokumen</span>
