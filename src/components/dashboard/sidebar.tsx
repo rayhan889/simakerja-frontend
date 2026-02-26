@@ -12,17 +12,43 @@ import { Avatar } from "radix-ui";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "react-router";
 import { displayFullName } from "@/lib/display-fullname";
+import type { UserRole } from "@/types/user.type";
 
 interface DashboardSidebarProps {
   collapsed: boolean
   onToggle: () => void
 }
 
-const navItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
+type NavItem = {
+  icon: React.ComponentType<{ className?: string }>,
+  label: string,
+  href: string
+  active?: boolean
+}
+
+const baseNavItems: NavItem[] = [
+  { icon: Home, label: "Dashboard", href: "/dashboard", active: false }
+]
+
+const studentNavItems: NavItem[] = [
   { icon: FileText, label: "Lacak Dokumen", href: "/dashboard/track-submission", active: false },
   { icon: Send, label: "Pengajuan Dokumen", href: "/dashboard/submit-submission", active: false },
 ]
+
+const staffNavItems: NavItem[] = [
+  { icon: FileText, label: "Lacak Dokumen", href: "/dashboard/staff-track-submission", active: false },
+]
+
+function getNavItemsByRole(role: UserRole): NavItem[] {
+  switch (role) {
+    case 'student':
+      return [...baseNavItems, ...studentNavItems];
+    case 'staff':
+      return [...baseNavItems, ...staffNavItems];
+    default:
+      return baseNavItems;
+  }
+}
 
 export const DashboardSidebar = ({
   collapsed,
@@ -31,6 +57,8 @@ export const DashboardSidebar = ({
 
   const { user } = useAuth();
   const location = useLocation();
+
+  const navItems = getNavItemsByRole(user?.role || 'student');
 
   const updatedNavItems = navItems.map(item => ({
     ...item,

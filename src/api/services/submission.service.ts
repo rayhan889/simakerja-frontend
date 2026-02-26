@@ -1,8 +1,8 @@
 import type { ApiResponse } from "@/types/auth.types";
 import { apiClient } from "@/api/client";
 import { AxiosError } from "axios";
-import type { CreateMoAIASubmissionRequest, MoAIASubmission, Submission, SubmissionDetails, SubmissionsByUserIdAndMoAIAType, UpdateMoaIaSubmissionRequest } from "@/types/submission.type";
-import type { PaginationResponese } from "@/types/pagination.type";
+import type { CreateMoAIASubmissionRequest, MoAIASubmission, StaffSubmissionPagination, StaffSubmissionPaginationDetail, Submission, SubmissionDetails, SubmissionsByUserIdAndMoAIAType, UpdateMoaIaSubmissionRequest } from "@/types/submission.type";
+import type { PaginationResponse } from "@/types/pagination.type";
 import type { QueryParams, SearchParams } from "@/types/table.types";
 import type { PartnerAndFacultyProfile } from '../../types/submission.type';
 
@@ -10,9 +10,9 @@ export const submissionService = {
 
     getPaginatedSubmissions: async (
         params: QueryParams
-    ): Promise<PaginationResponese<Submission> | null> => {
+    ): Promise<PaginationResponse<Submission> | null> => {
         try {
-          const response = await apiClient.get<ApiResponse<PaginationResponese<Submission>>>(
+          const response = await apiClient.get<ApiResponse<PaginationResponse<Submission>>>(
             `/submissions`,
             {
                 params: {
@@ -34,9 +34,9 @@ export const submissionService = {
 
     getPaginatedMoASubmissionsByUserId: async (
         params: QueryParams
-    ): Promise<PaginationResponese<MoAIASubmission> | null> => {
+    ): Promise<PaginationResponse<MoAIASubmission> | null> => {
       try {
-        const response = await apiClient.get<ApiResponse<PaginationResponese<MoAIASubmission>>>(
+        const response = await apiClient.get<ApiResponse<PaginationResponse<MoAIASubmission>>>(
             '/submissions/moa-ia',
             {
                 params: {
@@ -60,9 +60,9 @@ export const submissionService = {
       params: QueryParams,
       userId: string,
       nim?: string
-    ): Promise<PaginationResponese<SubmissionsByUserIdAndMoAIAType> | null>  => {
+    ): Promise<PaginationResponse<SubmissionsByUserIdAndMoAIAType> | null>  => {
       try {
-        const response = await apiClient.get<ApiResponse<PaginationResponese<SubmissionsByUserIdAndMoAIAType>>>(
+        const response = await apiClient.get<ApiResponse<PaginationResponse<SubmissionsByUserIdAndMoAIAType>>>(
             `/submissions/moa-ia/${userId}`,
             {
                 params: {
@@ -180,6 +180,60 @@ export const submissionService = {
             `/submissions/details/${submissionId}`,
         );
         return response.data;
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 401) {
+            return null;
+          }
+          throw error
+      }
+    },
+
+    getStaffSubmissionsPagination: async (
+      params: QueryParams,
+    ): Promise<PaginationResponse<StaffSubmissionPagination> | null> => {
+      try {
+        const response = await apiClient.get<ApiResponse<PaginationResponse<StaffSubmissionPagination>>>(
+            '/submissions/moa-ia/staff',
+            {
+                params: {
+                    page: params.page,
+                    size: params.size,
+                    ...(params.sort && { sort: params.sort }),
+                    ...(params.search && { search: params.search }),
+                }
+            }
+        );
+        return response.data.data;
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 401) {
+            return null;
+          }
+          throw error
+      }
+    },
+
+    getStaffSubmissionsPaginationDetail: async (
+      params: QueryParams,
+      partnerName: string,
+      period: string,
+      activityType: string,
+    ): Promise<PaginationResponse<StaffSubmissionPaginationDetail> | null> => {
+      try {
+        const response = await apiClient.get<ApiResponse<PaginationResponse<StaffSubmissionPaginationDetail>>>(
+            '/submissions/moa-ia/detail/staff',
+            {
+                params: {
+                    page: params.page,
+                    size: params.size,
+                    ...(params.sort && { sort: params.sort }),
+                    ...(params.search && { search: params.search }),
+                    ...(partnerName && { partner_name: partnerName }),
+                    ...(period && { period }),
+                    ...(activityType && { activity_type: activityType }),
+                }
+            }
+        );
+        return response.data.data;
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 401) {
             return null;

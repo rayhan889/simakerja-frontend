@@ -9,14 +9,12 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import { Loader2, X } from 'lucide-react';
 interface PDFViewerDialogProps {
     submissionId: string | null;
-    partnerName?: string;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
 export const PDFViewerDialog = ({
     submissionId,
-    partnerName,
     open,
     onOpenChange
 }: PDFViewerDialogProps) => { 
@@ -45,7 +43,7 @@ export const PDFViewerDialog = ({
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center h-full gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
-                            <p className="text-sm text-gray-500">Memuat dokumen {partnerName}...</p>
+                            <p className="text-sm text-gray-500">Memuat dokumen...</p>
                         </div>
                     )}
 

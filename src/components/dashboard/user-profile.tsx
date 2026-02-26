@@ -6,9 +6,12 @@ import { useAuth } from '@/hooks/use-auth'
 import { studyProgramOptions } from '@/types/submission.type'
 import { displayFullName } from '@/lib/display-fullname'
 
-export const DashboardStudentProfile = () => {
+export const DashboardUserProfile = () => {
 
     const { user } = useAuth();
+    
+    const isStudent = user?.role === 'student';
+    const isStaff = user?.role === 'staff';
   return (
     <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6">
         
@@ -36,10 +39,21 @@ export const DashboardStudentProfile = () => {
         <hr className='w-full h-px text-gray-200' />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
-            <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} />
-            <DetailItem icon={IdCard} label="NIM" value={user?.nim || "-"} />
-            <DetailItem icon={University} label="Jurusan" value={studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"} />
-            <DetailItem icon={Phone} label="Telepon" value={user?.phoneNumber || "-"} />
+            {isStudent && (
+              <>
+                <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} />
+                <DetailItem icon={IdCard} label="NIM" value={user?.nim || "-"} />
+                <DetailItem icon={University} label="Jurusan" value={studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"} />
+                <DetailItem icon={Phone} label="Telepon" value={user?.phoneNumber || "-"} />
+              </>
+            )}
+
+            {isStaff && (
+              <>
+                <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} />
+                <DetailItem icon={IdCard} label="NIP" value={user?.nip || "-"} />
+              </>
+            )}
         </div>
 
       </div>
