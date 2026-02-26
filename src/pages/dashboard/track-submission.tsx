@@ -200,7 +200,6 @@ export const DashboardTrackSubmissionPage = () => {
 
         <PDFViewerDialog
             submissionId={selectedSubmission?.id ?? null}
-            partnerName={selectedSubmission?.partnerName}
             open={pdfDialogOpen}
             onOpenChange={setPdfDialogOpen}
         />

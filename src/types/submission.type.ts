@@ -141,6 +141,23 @@ export interface CooperationRequestDetails {
     partnerName: string;
 }
 
+export interface StaffSubmissionPagination {
+    period: string;
+    partnerName: string;
+    partnerNumber: string;
+    activityType: ActivityType;
+    totalSubmissions: number;
+}
+
+export interface StaffSubmissionPaginationDetail {
+    submissionId: string;
+    submissionCode: string;
+    applicantStudyProgram: string;
+    applicantFullname: string;
+    applicantNim: string;
+    submissionStatus: SubmissionStatus;
+}
+
 export const studyProgramOptions = [
   { value: 'teknik_informatika', label: 'Teknik Informatika' },
   { value: 'sistem_informasi', label: 'Sistem Informasi' },

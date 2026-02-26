@@ -1,4 +1,4 @@
-export interface PaginationResponese<T> {
+export interface PaginationResponse<T> {
     content: T[];
     empty: boolean;
     first: boolean;

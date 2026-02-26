@@ -1,4 +1,4 @@
-import { submissionService } from "@/api/services/submissio.service";
+import { submissionService } from "@/api/services/submission.service";
 import type { CreateMoAIASubmissionRequest, UpdateMoaIaSubmissionRequest } from "@/types/submission.type";
 import type { QueryParams, SearchParams } from "@/types/table.types";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,8 @@ export const submissionKeys = {
         [...submissionKeys.moaIaByUser(userId), 'list', params] as const,
     partnerList: (search?: SearchParams) => [...submissionKeys.all, 'partners', search] as const,
     details: (submissionId: string) => [...submissionKeys.all, 'details', submissionId] as const,
+    moaIaForStaffList: (params: QueryParams) => [...submissionKeys.all, 'moa-ia-staff', 'list', params] as const,
+    moaIaForStaffDetailList: (params: QueryParams, partnerName?: string, period?: string, activityType?: string) => [...submissionKeys.all, 'moa-ia-staff', 'detail-list', params, { partnerName, period, activityType }] as const,
 }
 
 export function useSubmissions(params: QueryParams) {
@@ -190,7 +192,45 @@ export function usePartners(search?: SearchParams) {
     })
 }
 
+export function useMoaIASubmissionsForStaff(params: QueryParams) {
+    return useQuery({
+        queryKey: submissionKeys.moaIaForStaffList(params),
+
+        queryFn: () => submissionService.getStaffSubmissionsPagination(params),
+
+        placeholderData: keepPreviousData,
+
+        staleTime: 10 * 60 * 1000, // 10 minutes
+
+        refetchOnWindowFocus: false,
+
+        retry: 1,
+    })
+}
+
+export function useMoaIASubmissionsDetailForStaff(params: QueryParams, partnerName: string, period: string, activityType: string) {
+    const hasFilters = !!(partnerName && period && activityType)
+
+    return useQuery({
+        queryKey: submissionKeys.moaIaForStaffDetailList(params, partnerName, period, activityType),
+        
+        queryFn: () => submissionService.getStaffSubmissionsPaginationDetail(params, partnerName, period, activityType),
+
+        placeholderData: keepPreviousData,
+
+        staleTime: 10 * 60 * 1000, // 10 minutes
+
+        refetchOnWindowFocus: false,
+
+        retry: 1,
+
+        enabled: hasFilters,
+    })
+}
+
 export type SubmissionResult = ReturnType<typeof useSubmissions>;
 export type MoAIASubmissionResult = ReturnType<typeof useMoaIASubmissions>;
 export type SubmissionsByUserIdAndMoAIATypeResult = ReturnType<typeof useSubmissionsByUserIdAndMoAIAType>;
 export type SubmissionDetailsResult = ReturnType<typeof useSubmissionDetails>;
+export type MoAIASubmissionsForStaffResult = ReturnType<typeof useMoaIASubmissionsForStaff>;
+export type MoAIASubmissionsDetailForStaffResult = ReturnType<typeof useMoaIASubmissionsDetailForStaff>;

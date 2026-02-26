@@ -8,6 +8,8 @@ import { DashboardTrackSubmissionPage } from '@/pages/dashboard/track-submission
 import { DashboardSubmitSubmissionPage } from '@/pages/dashboard/submit-submission'
 import DashboardUpdateSubmissionPage from '@/pages/dashboard/update-submission'
 import DashboardUpdateUserPage from '@/pages/dashboard/update-user'
+import DashboardStaffTrackSubmission from '@/pages/dashboard/staff-track-submission'
+import DashboardStaffTrackDetailSubmission from '@/pages/dashboard/staff-track-detail-submission'
 
 const router = createBrowserRouter([
     {
@@ -36,19 +38,51 @@ const router = createBrowserRouter([
             },
             {
                 path: "/dashboard/track-submission",
-                element: <DashboardTrackSubmissionPage />
+                element: (
+                    <ProtectedRoute allowedRoles={['student']}>
+                        <DashboardTrackSubmissionPage />
+                    </ProtectedRoute>
+                )
             },
             {
                 path: "/dashboard/submit-submission",
-                element: <DashboardSubmitSubmissionPage />
+                element: (
+                    <ProtectedRoute allowedRoles={['student']}>
+                        <DashboardSubmitSubmissionPage />
+                    </ProtectedRoute>
+                )
             },
             {
                 path: "/dashboard/submission/:submissionId/edit",
-                element: <DashboardUpdateSubmissionPage />
+                element: (
+                    <ProtectedRoute allowedRoles={['student']}>
+                        <DashboardUpdateSubmissionPage />
+                    </ProtectedRoute>
+                )
             },
             {
                 path: "/dashboard/user/update",
-                element: <DashboardUpdateUserPage />
+                element: (
+                    <ProtectedRoute allowedRoles={['student', 'staff']}>
+                        <DashboardUpdateUserPage />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/staff-track-submission",
+                element: (
+                    <ProtectedRoute allowedRoles={['staff']}>
+                        <DashboardStaffTrackSubmission />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/staff-track-detail-submission",
+                element: (
+                    <ProtectedRoute allowedRoles={['staff']}>
+                        <DashboardStaffTrackDetailSubmission />
+                    </ProtectedRoute>
+                )
             }
         ]
     },

@@ -16,7 +16,7 @@ export function ProtectedRoute({
     children,
     allowedRoles = [],
     redirectTo = '/login',
-    forbiddenRedirect = '/forbidden'
+    forbiddenRedirect = '/unauthorized'
 }: ProtectedRouteProps) {
     console.log("trying to entering protected routes")
     const {isInitialized, isLoading, isAuthenticated} = useAuth();
