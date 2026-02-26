@@ -74,7 +74,7 @@ function DetailItem({
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600/10">
         <Icon className="h-4 w-4 text-teal-950" />
       </div>
-      <div className="min-w-0 text-start font-secondary">
+      <div className="min-w-0 text-start ">
         <p className="text-xs font-medium text-gray-600">{label}</p>
         <p className="truncate text-sm font-bold text-teal-950">
           {value}

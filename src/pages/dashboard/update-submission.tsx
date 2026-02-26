@@ -317,7 +317,7 @@ const DashboardUpdateSubmissionPage = () => {
 
     if (isLoadingSubmission) {
         return (
-            <div className="flex items-center justify-center min-h-[400px] font-secondary">
+            <div className="flex items-center justify-center min-h-[400px] ">
                 <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
                 <span className="ml-2 text-gray-600">Memuat data pengajuan...</span>
             </div>
@@ -326,7 +326,7 @@ const DashboardUpdateSubmissionPage = () => {
 
     if (isSubmissionError || !moaIaDetails) {
         return (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-8 font-secondary w-full">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-8  w-full">
                 <div className="flex flex-col items-center text-center">
                     <h3 className="mt-4 text-lg font-medium text-red-800">
                         Gagal Memuat Data
@@ -346,7 +346,7 @@ const DashboardUpdateSubmissionPage = () => {
         );
     }
   return (
-        <div className="w-full h-auto  flex flex-col items-start space-y-6 font-secondary">
+        <div className="w-full h-auto  flex flex-col items-start space-y-6 ">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900 font-sans">
                     Edit Pengajuan Dokumen
@@ -354,7 +354,7 @@ const DashboardUpdateSubmissionPage = () => {
             </div>
 
             {isPartnerFieldDisabled && (
-                <div className="w-full p-4 bg-amber-50 border text-start border-amber-200 font-secondary rounded-lg flex items-start gap-3">
+                <div className="w-full p-4 bg-amber-50 border text-start border-amber-200  rounded-lg flex items-start gap-3">
                     <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                     <div>
                         <p className="text-sm font-medium text-amber-800">
@@ -369,7 +369,7 @@ const DashboardUpdateSubmissionPage = () => {
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col space-y-3.5">
-                    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 font-secondary">
+                    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 ">
                         <div className='flex items-center gap-x-3'>
                             <BookText className='h-5 w-5' />
                             <div className='flex items-start flex-col space-y-0.5'>
@@ -606,7 +606,7 @@ const DashboardUpdateSubmissionPage = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 font-secondary">
+                    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 ">
                         <div className='flex items-center gap-x-3'>
                             <User className='h-5 w-5' />
                             <div className='flex items-start flex-col space-y-0.5'>
@@ -758,7 +758,7 @@ const DashboardUpdateSubmissionPage = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 font-secondary">
+                    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 ">
                         <div className='flex items-center gap-x-3'>
                             <BookText className='h-5 w-5' />
                             <div className='flex items-start flex-col space-y-0.5'>

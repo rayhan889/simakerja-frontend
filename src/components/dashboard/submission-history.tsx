@@ -81,7 +81,7 @@ export const DashboardSubmissionHistory = () => {
 
     if (isError) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-8 w-full font-secondary">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-8 w-full ">
         <div className="flex flex-col items-center text-center">
           <svg
             className="h-12 w-12 text-red-400"
@@ -133,7 +133,7 @@ export const DashboardSubmissionHistory = () => {
           debounceMs={300}
         />
 
-        <div className="flex items-center gap-3 font-secondary">
+        <div className="flex items-center gap-3 ">
           {isFetching && !isLoading && (
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <svg

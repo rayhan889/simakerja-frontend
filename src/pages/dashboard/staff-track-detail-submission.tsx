@@ -176,7 +176,7 @@ const DashboardStaffTrackDetailSubmission = () => {
   }
 
   return (
-    <div className='w-full flex flex-col space-y-3 font-secondary items-start'>
+    <div className='w-full flex flex-col space-y-3  items-start'>
         <Button
             variant={'link'}
             className='cursor-pointer'

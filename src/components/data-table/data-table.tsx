@@ -54,7 +54,7 @@ export function DataTable<TData, TValue>({
     })
 
     return (
-        <div className="space-y-4 w-full font-secondary">
+        <div className="space-y-4 w-full ">
         <div className="rounded-lg border border-gray-200 overflow-hidden">
             <table className="w-full text-sm">
             

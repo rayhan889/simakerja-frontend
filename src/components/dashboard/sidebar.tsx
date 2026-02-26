@@ -83,7 +83,7 @@ export const DashboardSidebar = ({
 
       <div
         className={cn(
-          "border-b border-gray-600 px-4 py-4 font-secondary",
+          "border-b border-gray-600 px-4 py-4 ",
           collapsed ? "flex justify-center" : "",
         )}
       >
@@ -111,7 +111,7 @@ export const DashboardSidebar = ({
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 font-secondary">
+      <nav className="flex-1 px-3 py-4 ">
         <ul className="flex flex-col gap-2">
           {updatedNavItems.map((item) => (
             <li key={item.label}>
