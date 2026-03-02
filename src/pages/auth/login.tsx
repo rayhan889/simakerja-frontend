@@ -1,61 +1,44 @@
-import { Link, useLocation } from 'react-router'
 import { GoogleLoginButton } from '@/components/google-login-button';
-import { Input } from '@/components/ui/input';
-import * as z from 'zod'
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
-import { Eye, EyeClosed } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { toast } from 'sonner';
 
-const emailPasswordSignInSchema = z.object({
-  email: z.email({ message: "Email tidak valid" }),
-  password: z.string().min(6, { message: "Password harus minimal 6 karakter" }),
-})
+// const emailPasswordSignInSchema = z.object({
+//   email: z.email({ message: "Email tidak valid" }),
+//   password: z.string().min(6, { message: "Password harus minimal 6 karakter" }),
+// })
 
-type EmailPasswordSignInData = z.infer<typeof emailPasswordSignInSchema>;
+// type EmailPasswordSignInData = z.infer<typeof emailPasswordSignInSchema>;
 
-const defaultValues: EmailPasswordSignInData = {
-  email: '',
-  password: '',
-}
+// const defaultValues: EmailPasswordSignInData = {
+//   email: '',
+//   password: '',
+// }
 
 export const LoginPage = () => {
-    const location = useLocation();
-    const params = new URLSearchParams(location.search);
-    const sessionExpired = params.get('session_expired') === 'true';
+    // const location = useLocation();
+    // const params = new URLSearchParams(location.search);
+    // const sessionExpired = params.get('session_expired') === 'true';
 
-    const [showPassword, setShowPassword] = useState(false);
+    // const [showPassword, setShowPassword] = useState(false);
 
-    const form = useForm<EmailPasswordSignInData>({
-        resolver: zodResolver(emailPasswordSignInSchema),
-        defaultValues,
-        mode: 'onChange'
-    })
+    // const form = useForm<EmailPasswordSignInData>({
+    //     resolver: zodResolver(emailPasswordSignInSchema),
+    //     defaultValues,
+    //     mode: 'onChange'
+    // })
 
-    const handleSubmit = (data: EmailPasswordSignInData) => {
-        console.log("Form submitted with data:", data);
-    }
+    // const handleSubmit = (data: EmailPasswordSignInData) => {
+    //     console.log("Form submitted with data:", data);
+    // }
 
-    const handleTogglePasswordVisibility = () => {
-        setShowPassword((prev) => !prev);
-    }
+    // const handleTogglePasswordVisibility = () => {
+    //     setShowPassword((prev) => !prev);
+    // }
 
-    useEffect(() => {
-        if (sessionExpired) {
-            form.reset();
-            toast.error("Sesi Anda telah berakhir. Silakan masuk kembali.");
-        }
-    }, [sessionExpired, form])
+    // useEffect(() => {
+    //     if (sessionExpired) {
+    //         form.reset();
+    //         toast.error("Sesi Anda telah berakhir. Silakan masuk kembali.");
+    //     }
+    // }, [sessionExpired, form])
     
     
   return (
@@ -73,7 +56,7 @@ export const LoginPage = () => {
               </span>
             </div>
 
-            <Form {...form}>
+            {/* <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className='w-full flex flex-col space-y-4'>
                 <FormField
                   control={form.control}
@@ -122,18 +105,18 @@ export const LoginPage = () => {
 
                 <Button type="submit" size={'lg'} className='bg-teal-950 cursor-pointer'>Masuk</Button>
              </form>
-            </Form>
+            </Form> */}
 
-            <div className="flex items-center gap-4 w-full">
+            {/* <div className="flex items-center gap-4 w-full">
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-sm text-gray-500">Atau</span>
               <div className="flex-1 h-px bg-gray-200" />
-            </div>
+            </div> */}
             <GoogleLoginButton  />
 
-            <Link to="/auth/register" className={buttonVariants({ variant: 'link', className: 'text-sm text-teal-950 hover:underline' })}>
+            {/* <Link to="/auth/register" className={buttonVariants({ variant: 'link', className: 'text-sm text-teal-950 hover:underline' })}>
                 Belum punya akun? <span className='text-teal-700'>Daftar</span>
-            </Link>
+            </Link> */}
           </div>
         </div>
 
@@ -146,7 +129,7 @@ export const LoginPage = () => {
             <p className="mt-3 font-medium">- Tim Humas UNESA</p>
           </div>
           
-          <img src="/unesa_bg_img.jpg" alt="Unesa Background Image" className="w-full h-full object-cover" />
+          <img src="/ft_unesa_bg.jpg" alt="Unesa Background Image" className="w-full h-full object-cover" />
           <div className='absolute inset-0 bg-linear-to-t from-teal-950/90 to-teal-700/20' />
         </div>
 
