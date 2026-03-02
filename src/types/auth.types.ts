@@ -1,8 +1,9 @@
 import type { UserRole } from "./user.type";
 
+type AuthStatus = 'active' | 'inactive' | 'suspended';
+
 export interface AuthUser {
     id: string;
-    sub: string;
     email: string;
     profilePicture: string;
     role: UserRole;
@@ -11,6 +12,12 @@ export interface AuthUser {
     nip?: string
     studyProgram?: string;
     phoneNumber?: string;
+    status: AuthStatus;
+}
+
+export interface RefreshTokenResponse {
+    accessToken: string;
+    user: AuthUser;
 }
 
 export interface AuthState {

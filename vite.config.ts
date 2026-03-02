@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: 'http://localhost:8080',
+        target: loadEnv('', process.cwd()).VITE_API_URL as string,
         changeOrigin: true,
           secure: false,      
           ws: true,
@@ -32,12 +32,12 @@ export default defineConfig({
           },
       },
       '/oauth2': {
-        target: 'http://localhost:8080',
+        target: loadEnv('', process.cwd()).VITE_API_URL as string,
         changeOrigin: true,
         secure: false,
       },
       '/login/oauth2': {
-        target: 'http://localhost:8080',
+        target: loadEnv('', process.cwd()).VITE_API_URL as string,
         changeOrigin: true,
         secure: false,
       }

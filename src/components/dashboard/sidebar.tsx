@@ -10,7 +10,7 @@ import {
 import { Avatar } from "radix-ui";
 
 import { useAuth } from "@/hooks/use-auth";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { displayFullName } from "@/lib/display-fullname";
 import type { UserRole } from "@/types/user.type";
 
@@ -54,8 +54,9 @@ export const DashboardSidebar = ({
   collapsed,
   onToggle,
 }: DashboardSidebarProps) => {
+  const navigate = useNavigate();
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
 
   const navItems = getNavItemsByRole(user?.role || 'student');
@@ -64,6 +65,11 @@ export const DashboardSidebar = ({
     ...item,
     active: location.pathname === item.href
   }));
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <aside
@@ -141,6 +147,7 @@ export const DashboardSidebar = ({
             "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-teal-600 hover:text-white",
             collapsed ? "justify-center px-0" : "",
           )}
+          onClick={handleLogout}
         >
           <LogOut className="h-5 w-5 shrink-0" />
           {!collapsed && <span>Keluar</span>}

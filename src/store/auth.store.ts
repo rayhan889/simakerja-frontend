@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { AuthState, AuthUser } from '@/types/auth.types';
 import { authService } from '@/api/services/auth.service';
+import { setAccessToken } from '@/api/client';
 
 export const useAuthStore = create<AuthState>()(
     persist(
@@ -18,18 +19,31 @@ export const useAuthStore = create<AuthState>()(
                 set({isLoading: true, error: null});
                 try {
 
-                    // api call
-                    const user = await authService.getCurrentUser();
+                    const result = await authService.refreshToken();
 
-                    set({
-                        user,
-                        isLoading: false,
-                        isAuthenticated: !!user,
-                        isInitialized: true,
-                        error: null
-                    });
+                    if (result) {
+                        setAccessToken(result.accessToken);
+                        set({
+                            user: result.user,
+                            isLoading: false,
+                            isAuthenticated: !!result.user,
+                            isInitialized: true,
+                            error: null
+                        });
+                    } else {
+                        setAccessToken(null);
+                        set({
+                            user: null,
+                            isLoading: false,
+                            isAuthenticated: false,
+                            isInitialized: true,
+                            error: null
+                        });
+                    }
+
                 } catch (error) {
                     console.error('Error during initialization:', error);
+                    setAccessToken(null);
 
                     set({
                         user: null,
@@ -38,8 +52,6 @@ export const useAuthStore = create<AuthState>()(
                         isInitialized: true,
                         error: null
                     });
-                } finally {
-                    set({isLoading: false});
                 }
             },
 
@@ -69,6 +81,7 @@ export const useAuthStore = create<AuthState>()(
                 } catch (error) {
                     console.error('Error during logout:', error);
                 } finally {
+                    setAccessToken(null);
                     set({
                         user: null,
                         isAuthenticated: false,
