@@ -6,6 +6,10 @@ import { useAuth } from '@/hooks/use-auth'
 import { studyProgramOptions } from '@/types/submission.type'
 import { displayFullName } from '@/lib/display-fullname'
 import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import type { UserRole } from '@/types/user.type'
+import { getInitials } from '@/lib/profile-fallack'
+import { displayRole } from '@/lib/display-role'
 
 const accentColorMap = {
   teal: {
@@ -45,22 +49,34 @@ type AccentColor = keyof typeof accentColorMap
 export const DashboardUserProfile = () => {
 
     const { user } = useAuth();
+
+    const [imageError, setImageError] = useState(false);
+
+    const hasImage = Boolean(user?.profilePicture) && !imageError;
     
     const isStudent = user?.role === 'student';
     const isStaff = user?.role === 'staff';
+    const isSuperAdmin = user?.role === 'superadmin';
   return (
     <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 relative overflow-hidden">
         
         <div className="flex items-center gap-x-5 z-20">
           <Avatar.Root className="h-24 w-24 shrink-0">
-            <Avatar.Image
-              src={user?.profilePicture}
-              alt={user?.fullName}
-              referrerPolicy="no-referrer"
-              className="rounded-full"
-            />
-            <Avatar.Fallback className="bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
-              {user?.fullName.split(" ").map(name => name[0]).join("")}
+            {hasImage && user && (
+              <Avatar.Image
+                src={user.profilePicture}
+                alt={user.fullName || "User avatar"}
+                referrerPolicy="no-referrer"
+                onError={() => setImageError(true)}
+                className="h-full w-full rounded-full object-cover"
+              />
+            )}
+
+            <Avatar.Fallback
+              delayMs={0}
+              className="flex h-full w-full items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground"
+            >
+              {getInitials(user?.fullName as string)}
             </Avatar.Fallback>
           </Avatar.Root>
 
@@ -68,7 +84,7 @@ export const DashboardUserProfile = () => {
             <h1 className='text-2xl font-bold capitalize'>{displayFullName(user?.fullName || "")}</h1>
 
             <Badge variant={'outline'} className='border-gray-200'>
-              {user?.role === 'student' ? 'Mahasiswa' : user?.role === 'staff' ? 'Staf' : 'Admin'}
+              {displayRole(user?.role as UserRole || "")}
             </Badge>
           </div>
         </div>
@@ -92,6 +108,10 @@ export const DashboardUserProfile = () => {
                 <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} accentColor="violet" />
                 <DetailItem icon={IdCard} label="NIP" value={user?.nip || "-"} accentColor="teal" />
               </>
+            )}
+
+            {isSuperAdmin && (
+                <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} accentColor="violet" />
             )}
         </div>
 

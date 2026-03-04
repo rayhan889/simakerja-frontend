@@ -12,6 +12,14 @@ export interface User {
     status: UserStatus;
 }
 
+export interface CreatedUser {
+    email: string;
+    fullName: string;
+    phoneNumber?: string;
+    status: UserStatus;
+    role: UserRole;
+}
+
 export interface Student {
     id: string;
     userId: string;
@@ -36,3 +44,10 @@ export interface StudentInfo {
     nim: string;
     email: string;
 }
+
+export const userRoleOptions = [
+  { value: 'student', label: 'Mahasiswa' },
+  { value: 'lecturer', label: 'Dosen' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'superadmin', label: 'Super Admin' },
+];

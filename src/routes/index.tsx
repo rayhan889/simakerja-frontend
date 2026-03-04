@@ -10,6 +10,7 @@ import DashboardUpdateSubmissionPage from '@/pages/dashboard/update-submission'
 import DashboardUpdateUserPage from '@/pages/dashboard/update-user'
 import DashboardStaffTrackSubmission from '@/pages/dashboard/staff-track-submission'
 import DashboardStaffTrackDetailSubmission from '@/pages/dashboard/staff-track-detail-submission'
+import DashboardListUserPage from '@/pages/dashboard/list-user'
 
 const router = createBrowserRouter([
     {
@@ -63,7 +64,7 @@ const router = createBrowserRouter([
             {
                 path: "/dashboard/user/update",
                 element: (
-                    <ProtectedRoute allowedRoles={['student', 'staff', 'superadmin']}>
+                    <ProtectedRoute allowedRoles={['student']}>
                         <DashboardUpdateUserPage />
                     </ProtectedRoute>
                 )
@@ -81,6 +82,14 @@ const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute allowedRoles={['staff', 'superadmin']}>
                         <DashboardStaffTrackDetailSubmission />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/admin-track-users",
+                element: (
+                    <ProtectedRoute allowedRoles={['superadmin']}>
+                        <DashboardListUserPage />
                     </ProtectedRoute>
                 )
             }
