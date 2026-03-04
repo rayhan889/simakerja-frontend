@@ -17,7 +17,7 @@ export function ProtectedRoute({
     allowedRoles = [],
     redirectTo = '/login',
     forbiddenRedirect = '/unauthorized'
-}: ProtectedRouteProps) {
+}: Readonly<ProtectedRouteProps>) {
     console.log("trying to entering protected routes")
     const {isInitialized, isLoading, isAuthenticated} = useAuth();
     const location = useLocation()

@@ -8,10 +8,10 @@ export function GuestRoute({
     children: React.ReactNode;
     redirectTo?: string;
 }) {
-    const {isInitialized, isLoading, isAuthenticated} = useAuth();
+    const {isInitialized, isAuthenticated} = useAuth();
     const location = useLocation();
 
-    if (!isInitialized || isLoading) {
+    if (!isInitialized) {
         return (
             <div className="flex h-screen w-screen items-center justify-center">
                 <div className="flex flex-col items-center gap-4">

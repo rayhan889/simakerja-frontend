@@ -20,6 +20,8 @@ export const apiClient = axios.create({
 
 const COOKIE_ONLY_ENDPOINTS = ['/auth/refresh', '/auth/logout'];
 
+const SKIP_REFRESH_ENDPOINTS = ['/auth/login', '/auth/refresh'];
+
 // Runs before every request is sent
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -69,7 +71,18 @@ apiClient.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
+        const hadSession = !!getAccessToken();
+
+        const isSkipRefreshToken = SKIP_REFRESH_ENDPOINTS.some(
+            (endpoint) => originalRequest.url?.includes(endpoint)
+        )
+
+        if (
+            error.response?.status === 401 && 
+            !originalRequest._retry && 
+            !isSkipRefreshToken &&
+            hadSession
+        ) {
             if (isRefreshing) {
                 if (import.meta.env.DEV) {
                     console.log('[API] Token refresh in progress, queuing request...')

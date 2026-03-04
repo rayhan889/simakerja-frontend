@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: (
-            <ProtectedRoute allowedRoles={['student', 'staff']}>
+            <ProtectedRoute allowedRoles={['student', 'staff', 'superadmin']}>
                 <DashboardLayout />
             </ProtectedRoute>
         ),
@@ -63,7 +63,7 @@ const router = createBrowserRouter([
             {
                 path: "/dashboard/user/update",
                 element: (
-                    <ProtectedRoute allowedRoles={['student', 'staff']}>
+                    <ProtectedRoute allowedRoles={['student', 'staff', 'superadmin']}>
                         <DashboardUpdateUserPage />
                     </ProtectedRoute>
                 )
@@ -71,7 +71,7 @@ const router = createBrowserRouter([
             {
                 path: "/dashboard/staff-track-submission",
                 element: (
-                    <ProtectedRoute allowedRoles={['staff']}>
+                    <ProtectedRoute allowedRoles={['staff', 'superadmin']}>
                         <DashboardStaffTrackSubmission />
                     </ProtectedRoute>
                 )
@@ -79,7 +79,7 @@ const router = createBrowserRouter([
             {
                 path: "/dashboard/staff-track-detail-submission",
                 element: (
-                    <ProtectedRoute allowedRoles={['staff']}>
+                    <ProtectedRoute allowedRoles={['staff', 'superadmin']}>
                         <DashboardStaffTrackDetailSubmission />
                     </ProtectedRoute>
                 )

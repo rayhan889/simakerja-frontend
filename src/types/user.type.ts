@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'lecturer' | 'staff' | 'adhoc';
+export type UserRole = 'student' | 'lecturer' | 'staff' | 'adhoc' | 'superadmin';
 
 export type UserStatus = 'active' | 'inactive';
 
