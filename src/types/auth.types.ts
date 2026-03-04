@@ -2,6 +2,13 @@ import type { UserRole } from "./user.type";
 
 type AuthStatus = 'active' | 'inactive' | 'suspended';
 
+export type LoginErrorCodes = 'INVALID_CREDENTIALS' | 'ACCOUNT_LOCKED' | 'USER_NOT_FOUND' | 'UNKNOWN_ERROR' | 'FORBIDDEN';
+
+export interface AuthError {
+    errorCode: LoginErrorCodes | null;
+    message: string;
+}
+
 export interface AuthUser {
     id: string;
     email: string;
@@ -25,6 +32,7 @@ export interface AuthState {
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
+    errorCode: LoginErrorCodes | null;
     isInitialized?: boolean;
 
     initialize: () => Promise<void>;
@@ -32,6 +40,12 @@ export interface AuthState {
     logout: () => Promise<void>;
     setError: (error: string | null) => void;
     updateFields: (fields: Partial<AuthUser>) => void;
+    login: (email: string, password: string) => Promise<void>;
+}
+
+export interface AuthSuccessResponse {
+    accessToken: string;
+    user: AuthUser;
 }
 
 export interface ApiResponse<T> {
@@ -39,4 +53,5 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
   timestamp: string;
+  errorCode?: string;
 }

@@ -8,11 +8,13 @@ export function useAuth() {
     const isLoading = useAuthStore((state) => state.isLoading);
     const error = useAuthStore((state) => state.error);
     const isInitialized = useAuthStore((state) => state.isInitialized);
+    const errorCode = useAuthStore((state) => state.errorCode);
 
     const initialize = useAuthStore((state) => state.initialize);
     const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
     const logout = useAuthStore((state) => state.logout);
     const setError = useAuthStore((state) => state.setError);
+    const login = useAuthStore((state) => state.login);
 
     return {
         // State
@@ -21,12 +23,14 @@ export function useAuth() {
         isLoading,
         error,
         isInitialized,
+        errorCode,
 
         // Actions
         initialize,
         loginWithGoogle,
         logout,
-        setError
+        setError,
+        login
     }
 }
 
