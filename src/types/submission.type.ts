@@ -4,21 +4,20 @@ export type SubmissionType = 'moa_ia' | 'mou' | 'visit_request' | 'cooperation_r
 
 export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 'verified_staff' |  'rejected' | 'completed';
 
-export type MoAIASubmissionType = 'moa' | 'ia';
+export type MoAIASubmissionType = 'moa' | 'ia' | 'moa_ia';
 
-export type ActivityType = 'internship' | 'study_independent' | 'kkn' | 'research' | 'community_service';
+export type ActivityType = 'internship' | 'study_independent' | 'kkn';
 
 export const activityLabels: Record<ActivityType, string> = {
   internship: 'Magang',
   study_independent: 'Studi Independen',
-  kkn: 'KKN',
-  research: 'Penelitian',
-  community_service: 'Pengabdian Masyarakat',
+  kkn: 'KKN'
 };
 
 export const documentTypeLabels: Record<string, string> = {
   moa: 'MoA',
   ia: 'IA',
+  moa_ia: 'MoA & IA Terintegrasi'
 };
 
 export interface Submission {
@@ -111,7 +110,7 @@ export interface UpdateMoaIaSubmissionRequest {
 
 export interface MoaIaUpdateDetailRequest {
     partnerName: string;
-    partnerNumber: string;
+    partnerNumber?: string;
     partnerAddress: string;
     facultyRepresentativeName: string;
     partnerRepresentativeName: string;
@@ -119,6 +118,7 @@ export interface MoaIaUpdateDetailRequest {
     activityType: ActivityType;
     studentSnapshots: Array<StudentSnapshotRequest>;
     partnerLogoKey: string;
+    partnerCooperationPeriod: number;
 }
 
 export interface SubmissionDetails {
