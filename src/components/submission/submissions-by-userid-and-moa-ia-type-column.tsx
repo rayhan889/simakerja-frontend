@@ -94,6 +94,7 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                         {
                             documentType == 'moa' ? 'MoA' :
                             documentType == 'ia' ? 'IA' :
+                            documentType == 'moa_ia' ? 'MoA & IA Terintegrasi' :
                             documentType
                         }
                     </span>
