@@ -1,5 +1,5 @@
 import { Info, BookText, User, Trash2, Plus, Loader2, UploadCloud } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,41 +47,25 @@ import {
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { trigramSimilarity } from '@/lib/trigram';
 import { useGetAllRegisteredFilteredStudents } from '@/hooks/use-user';
-import type { StudentInfo } from '@/types/user.type';
 import { displayFullName } from '@/lib/display-fullname';
 import { useAuth } from '@/hooks/use-auth';
 import { FeatureGate } from '@/routes/guards/feature-gate';
 import { canCreateSubmission } from '@/policies/studentPolicies';
 import { FeatureBlockDialog } from '@/components/ui/feature-block-dialog';
+import {
+    studentSnapshotSchema,
+    studentSnapshotsSuperRefine,
+    studentInfoToNims,
+    nimsToStudentInfo,
+    buildExcludedNimsPerGroup,
+} from '@/lib/submission-form-utils';
 
 const FACULTY_OF_TECHNOLOGY = 'Teknik';
 const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
 const FACULTY_REPRESENTATIVE_NAME = 'Prof. Dr. Suparji, S.Pd., M.Pd.';
 
-const studentInfoSchema = z.object({
-    fullName: z.string({ error: "Nama lengkap mahasiswa harus diisi" })
-        .min(1, "Nama lengkap mahasiswa harus diisi"),
-    nim: z.string({ error: "NIM mahasiswa harus diisi" }).min(11, "NIM mahasiswa harus terdiri dari minimal 11 karakter"),
-    email: z.email("Format email mahasiswa tidak valid"),
-})
-
-const studentSnapshotSchema = z.object({
-    studyProgram: z
-        .string({ error: "Program studi harus dipilih" })
-        .min(1, "Program studi harus dipilih"),
-    
-    students: z
-        .array(studentInfoSchema)
-        .min(1, "Minimal 1 mahasiswa harus ditambahkan")
-        .max(3, "Maksimal 3 mahasiswa per grup"),
-    
-    unit: z
-        .string({ error: "Unit/Departemen harus diisi" })
-        .min(1, "Unit/Departemen harus diisi"),
-});
-
 const moaIaDetailSchema = z.object({
-    documentType: z.enum(['moa', 'ia'], { error: "Tipe dokumen harus dipilih" }),
+    documentType: z.enum(['moa', 'ia', 'moa_ia'], { error: "Tipe dokumen harus dipilih" }),
     
     partnerName: z
         .string({ error: "Nama mitra harus diisi" })
@@ -115,7 +99,7 @@ const moaIaDetailSchema = z.object({
         .max(255, "Posisi perwakilan mitra maksimal 255 karakter"),
     
     activityType: z.enum(
-        ['internship', 'study_independent', 'kkn', 'research', 'community_service'],
+        ['internship', 'study_independent', 'kkn'],
         { error: "Tipe aktivitas harus dipilih" }
     ),
 
@@ -126,52 +110,7 @@ const moaIaDetailSchema = z.object({
     studentSnapshots: z
         .array(studentSnapshotSchema)
         .min(1, "Minimal 1 grup mahasiswa harus ditambahkan")
-        .superRefine((snapshots, ctx) => {
-            const seenCombinations = new Set<string>();
-            const duplicateIndices: number[] = [];
-            const seenStudentNims = new Set<string>();
-            const duplicateStudentNims: string[] = [];
-            
-            for (let i = 0; i < snapshots.length; i++) {
-                const snapshot = snapshots[i];
-                
-                if (!snapshot.studyProgram || !snapshot.unit) {
-                    continue;
-                }
-                
-                const compositeKey = `${snapshot.studyProgram}|${snapshot.unit}`;
-                
-                if (seenCombinations.has(compositeKey)) {
-                    duplicateIndices.push(i);
-                } else {
-                    seenCombinations.add(compositeKey);
-                }
-
-                for (const student of snapshot.students) {
-                    if (seenStudentNims.has(student.nim)) {
-                        duplicateStudentNims.push(student.nim);
-                    } else {
-                        seenStudentNims.add(student.nim);
-                    }
-                }
-            }
-            
-            if (duplicateIndices.length > 0) {
-                ctx.addIssue({
-                    code: 'custom',
-                    message: "Kombinasi Program Studi dan Unit/Departemen tidak boleh sama antar grup mahasiswa. Setiap grup harus memiliki kombinasi yang unik.",
-                    path: [],
-                });
-            }
-
-            if (duplicateStudentNims.length > 0) {
-                ctx.addIssue({
-                    code: 'custom',
-                    message: `NIM ${duplicateStudentNims.join(', ')} sudah digunakan di grup mahasiswa lain. Setiap mahasiswa hanya boleh muncul di satu grup.`,
-                    path: [],
-                });
-            }
-        }),
+        .superRefine(studentSnapshotsSuperRefine),
 });
 
 const submissionFormSchema = z.object({
@@ -192,32 +131,6 @@ const submissionFormSchema = z.object({
 
 type SubmissionFormValues = z.infer<typeof submissionFormSchema>;
 
-// const defaultValues: SubmissionFormValues = {
-//     submissionType: 'moa_ia',
-//     notes: '',
-//     faculty: FACULTY_OF_TECHNOLOGY,
-//     facultyAddress: FACULTY_OF_TECHNOLOGY_ADDRESS,
-//     moaIa: {
-//         documentType: 'moa',
-//         partnerName: '',
-//         partnerNumber: '',
-//         partnerAddress: '',
-//         partnerLogoKey: '',
-//         facultyRepresentativeName: FACULTY_REPRESENTATIVE_NAME,
-//         partnerRepresentativeName: '',
-//         partnerRepresentativePosition: '',
-//         partnerCooperationPeriod: 1,
-//         activityType: 'internship',
-//         studentSnapshots: [
-//         {
-//             studyProgram: '',
-//             students: [],
-//             unit: '',
-//         },
-//     ],
-//     },
-// };
-
 const buildDefaultValues = (userStudyProgram?: string): SubmissionFormValues => {
    return {
         submissionType: 'moa_ia',
@@ -225,7 +138,7 @@ const buildDefaultValues = (userStudyProgram?: string): SubmissionFormValues => 
         faculty: FACULTY_OF_TECHNOLOGY,
         facultyAddress: FACULTY_OF_TECHNOLOGY_ADDRESS,
         moaIa: {
-            documentType: 'moa',
+            documentType: 'moa_ia',
             partnerName: '',
             partnerNumber: '',
             partnerAddress: '',
@@ -288,6 +201,11 @@ export const DashboardSubmitSubmissionPage = () => {
 
     const filteredStudentsQueries = useGetAllRegisteredFilteredStudents(undefined, studentSnapshots);
 
+    const excludedNimsPerGroup = useMemo(
+        () => buildExcludedNimsPerGroup(studentSnapshots),
+        [studentSnapshots]
+    );
+
     useEffect(() => {
         if (!isValidStudent) return;
 
@@ -297,7 +215,6 @@ export const DashboardSubmitSubmissionPage = () => {
         if (!studentsData) return;
 
         const authStudentInfo = studentsData.find(s => s.nim === userNim);
-        console.log('current auth student info' + authStudentInfo?.fullName)
 
         if (!authStudentInfo) return;
 
@@ -315,6 +232,7 @@ export const DashboardSubmitSubmissionPage = () => {
     const formPartnerName = form.watch('moaIa.partnerName');
     const formPartnerNumber = form.watch('moaIa.partnerNumber');
     useEffect(() => {
+        console.log('partner number', formPartnerNumber)
 
         if (partnerMode !== 'new' || !formPartnerName || !formPartnerNumber) {
             return;
@@ -325,7 +243,11 @@ export const DashboardSubmitSubmissionPage = () => {
 
                 const partnerNameSimilaryPoint = trigramSimilarity(partner.partnerName, formPartnerName);
                 console.log('similary point: ' + partnerNameSimilaryPoint)
-                if (partnerNameSimilaryPoint > 0.6 && partner.partnerNumber === formPartnerNumber) {
+                if (partnerNameSimilaryPoint > 0.6 && (
+                    partner.partnerNumber ? (
+                        partner.partnerNumber === formPartnerNumber
+                    ) : true
+                )) {
                     toast.error(`
                         Profil mitra yang Anda masukkan mirip dengan mitra yang sudah ada: 
                         "${partner.partnerName}". Jika ini adalah mitra baru, 
@@ -354,7 +276,7 @@ export const DashboardSubmitSubmissionPage = () => {
 
         form.setValue('moaIa.partnerName', partner.partnerName, { shouldDirty: true });
         form.setValue('moaIa.partnerAddress', partner.partnerAddress, { shouldDirty: true });
-        form.setValue('moaIa.partnerNumber', partner.partnerNumber, { shouldDirty: true });
+        form.setValue('moaIa.partnerNumber', partner.partnerNumber ?? "", { shouldDirty: true });
         form.setValue('moaIa.partnerRepresentativeName', partner.partnerRepresentativeName, { shouldDirty: true });
         form.setValue('moaIa.partnerRepresentativePosition', partner.partnerRepresentativePosition, { shouldDirty: true });
         form.setValue('moaIa.activityType', partner.activityType, { shouldDirty: true });
@@ -434,19 +356,6 @@ export const DashboardSubmitSubmissionPage = () => {
             students: [],
             unit: '',
         })
-    }
-
-    function studentInfoToNims(students: StudentInfo[] | undefined): string[] {
-        return students?.map((s) => s.nim) ?? [];
-    }
-
-    function nimsToStudentInfo(
-        nims: string[],
-        studentsList: StudentInfo[] | undefined
-    ): StudentInfo[] {
-        if (!studentsList) return [];
-        const byNim = new Map(studentsList.map((s) => [s.nim, s]));
-        return nims.map((nim) => byNim.get(nim)).filter((s): s is StudentInfo => s != null);
     }
 
   return (
@@ -963,6 +872,8 @@ export const DashboardSubmitSubmissionPage = () => {
 
                             const isValidStudentsAvailable =
                             !!studentsData?.data && studentsData.data.length > 0;
+
+                            const excludedNims = excludedNimsPerGroup[index] ?? new Set<string>();
                             return (
                                 <div 
                                     key={field.id} 
@@ -1088,11 +999,22 @@ export const DashboardSubmitSubmissionPage = () => {
                                                 {isValidStudentsAvailable && (
                                                     <MultiSelectContent>
                                                     <MultiSelectGroup>
-                                                        {studentsData?.data.map((student) => (
-                                                        <MultiSelectItem key={student.nim} value={student.nim} disabled={index === 0 && student.nim === userNim}>
-                                                            [{student.nim}] - {displayFullName(student.fullName)}
-                                                        </MultiSelectItem>
-                                                        ))}
+                                                        {studentsData?.data.map((student) => {
+                                                            const isAuthUser = index === 0 && student.nim === userNim;
+                                                            const isSelectedElsewhere = excludedNims.has(student.nim);
+                                                            return (
+                                                                <MultiSelectItem
+                                                                    key={student.nim}
+                                                                    value={student.nim}
+                                                                    disabled={isAuthUser || isSelectedElsewhere}
+                                                                >
+                                                                    [{student.nim}] - {displayFullName(student.fullName)}
+                                                                    {isSelectedElsewhere && (
+                                                                        <span className="ml-1 text-xs text-gray-400">(sudah dipilih di grup lain)</span>
+                                                                    )}
+                                                                </MultiSelectItem>
+                                                            );
+                                                        })}
                                                     </MultiSelectGroup>
                                                     </MultiSelectContent>
                                                 )}
