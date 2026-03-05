@@ -127,8 +127,8 @@ export const DashboardTrackSubmissionPage = () => {
       <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Lacak Dokumen MoA & IA
+            <h1 className="text-lg font-semibold text-gray-900">
+                Lacak Pengajuan MoA IA
             </h1>
           </div>
           

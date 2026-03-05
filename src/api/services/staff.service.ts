@@ -2,23 +2,15 @@ import type { ApiResponse } from "@/types/auth.types";
 import type { Submission } from "@/types/submission.type";
 import { AxiosError } from "axios";
 import { apiClient } from "../client";
-import type { StaffVerifySubmissionRequest } from "@/types/staff.type";
 
 export const staffService = {
 
     updateSubmissionStatusToVerifiedByStaff: async (
-        submissionId: string,
-        request: StaffVerifySubmissionRequest
+        submissionId: string
     ): Promise<ApiResponse<Submission> | null> => {
         try {
             const response = await apiClient.put<ApiResponse<Submission>>(
-                `/staffs/verify-moa-ia/${submissionId}`,
-                request,
-                    {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                }
+                `/staffs/verify-moa-ia/${submissionId}`
             );
             return response.data;
         } catch (error) {

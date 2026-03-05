@@ -459,7 +459,7 @@ export const DashboardSubmitSubmissionPage = () => {
         <div className="w-full h-auto  flex flex-col items-start space-y-6">
         
         <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-lg font-semibold text-gray-900">
                 Pengajuan Dokumen
             </h1>
         </div>
@@ -927,7 +927,7 @@ export const DashboardSubmitSubmissionPage = () => {
                         )}
 
                         {partnerMode === 'existing' && selectedPartner && (
-                            <div className="col-span-3 rounded-lg border border-teal-200 bg-teal-50 p-2">
+                            <div className="col-span-4 rounded-lg border border-teal-200 bg-teal-50 p-2">
                                 <p className="text-sm text-teal-800">
                                     <span className="font-medium">Logo Mitra:</span> Menggunakan logo yang sudah tersimpan dari profil mitra "{selectedPartner.partnerName}".
                                 </p>
@@ -998,6 +998,7 @@ export const DashboardSubmitSubmissionPage = () => {
                                                 name={field.name}
                                                 onValueChange={field.onChange}
                                                 value={field.value}
+                                                disabled={index === 0 && !!userStudyProgram}
                                             >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="Program Studi" />
