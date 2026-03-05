@@ -109,7 +109,7 @@ export function getSubmissionsMoaIaDetailForStaffColumns(
                     <button
                         className="rounded-full p-2 cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         title="Verifikasi Dokumen"
-                        disabled={isThisRowVerifying}
+                        disabled={isThisRowVerifying || info.row.original.submissionStatus === 'verified_staff'}
                         onClick={() =>
                             options.onVerifyDocument?.(submissionId, {
                             submissionStatus: "verified_staff",

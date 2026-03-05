@@ -6,6 +6,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from "lucide-react"
 import { Avatar } from "radix-ui";
 
@@ -13,6 +14,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation, useNavigate } from "react-router";
 import { displayFullName } from "@/lib/display-fullname";
 import type { UserRole } from "@/types/user.type";
+import { useState } from "react";
+import { getInitials } from "@/lib/profile-fallack";
+import { displayRole } from "@/lib/display-role";
 
 interface DashboardSidebarProps {
   collapsed: boolean
@@ -39,12 +43,18 @@ const staffNavItems: NavItem[] = [
   { icon: FileText, label: "Lacak Dokumen", href: "/dashboard/staff-track-submission", active: false },
 ]
 
+const superadminNavItems: NavItem[] = [
+   { icon: Users, label: "Lacak Pengguna", href: "/dashboard/admin-track-users", active: false },
+]
+
 function getNavItemsByRole(role: UserRole): NavItem[] {
   switch (role) {
     case 'student':
       return [...baseNavItems, ...studentNavItems];
     case 'staff':
       return [...baseNavItems, ...staffNavItems];
+    case 'superadmin':
+      return [...baseNavItems, ...superadminNavItems];
     default:
       return baseNavItems;
   }
@@ -58,8 +68,12 @@ export const DashboardSidebar = ({
 
   const { user, logout } = useAuth();
   const location = useLocation();
+  
+  const [imageError, setImageError] = useState(false);
 
   const navItems = getNavItemsByRole(user?.role || 'student');
+
+  const hasImage = Boolean(user?.profilePicture) && !imageError;
 
   const updatedNavItems = navItems.map(item => ({
     ...item,
@@ -95,14 +109,21 @@ export const DashboardSidebar = ({
       >
         <div className={cn("flex items-center", collapsed ? "" : "gap-3")}>
           <Avatar.Root className="h-9 w-9 shrink-0">
-            <Avatar.Image
-              src={user?.profilePicture}
-              alt={user?.fullName}
-              referrerPolicy="no-referrer"
-              className="rounded-full"
-            />
-            <Avatar.Fallback className="bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
-              {user?.fullName.split(" ").map(name => name[0]).join("")}
+            {hasImage && user && (
+              <Avatar.Image
+                src={user.profilePicture}
+                alt={user.fullName || "User avatar"}
+                referrerPolicy="no-referrer"
+                onError={() => setImageError(true)}
+                className="h-full w-full rounded-full object-cover"
+              />
+            )}
+
+            <Avatar.Fallback
+              delayMs={0}
+              className="flex h-full w-full items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground"
+            >
+              {getInitials(user?.fullName as string)}
             </Avatar.Fallback>
           </Avatar.Root>
           {!collapsed && (
@@ -111,7 +132,7 @@ export const DashboardSidebar = ({
                 {displayFullName(user?.fullName || "")}
               </p>
               <p className="text-xs capitalize">
-                {user?.role === 'student' ? 'Mahasiswa' : user?.role === 'staff' ? 'Staf' : 'Admin'}
+                {displayRole(user?.role as UserRole || "")}
               </p>
             </div>
           )}

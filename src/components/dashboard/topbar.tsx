@@ -13,9 +13,15 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "react-router";
 import { displayFullName } from "@/lib/display-fullname";
+import { getInitials } from "@/lib/profile-fallack";
+import { useState } from "react";
 
 export const DashboardTopbar = () => {
     const { user } = useAuth();
+
+    const [imageError, setImageError] = useState(false);
+    
+    const hasImage = Boolean(user?.profilePicture) && !imageError;
 
   return (
      <header className=" sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 backdrop-blur-md lg:px-8">
@@ -41,15 +47,22 @@ export const DashboardTopbar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar.Root className="h-9 w-9 cursor-pointer">
-              <Avatar.Image
-                src={user?.profilePicture}
-                alt={user?.fullName}
-                referrerPolicy="no-referrer"
-                className="rounded-full"
-              />
-            <Avatar.Fallback className="bg-primary text-primary-foreground text-xs font-bold">
-              {user?.fullName.split(" ").map(name => name[0]).join("")}
-            </Avatar.Fallback>
+              {hasImage && user && (
+                <Avatar.Image
+                  src={user.profilePicture}
+                  alt={user.fullName || "User avatar"}
+                  referrerPolicy="no-referrer"
+                  onError={() => setImageError(true)}
+                  className="h-full w-full rounded-full object-cover"
+                />
+              )}
+  
+              <Avatar.Fallback
+                delayMs={0}
+                className="flex h-full w-full items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground"
+              >
+                {getInitials(user?.fullName as string)}
+              </Avatar.Fallback>
           </Avatar.Root>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="mr-6">

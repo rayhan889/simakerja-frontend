@@ -5,7 +5,7 @@ import { getSubmissionsMoaIaDetailForStaffColumns } from '@/components/submissio
 import { Button } from '@/components/ui/button'
 import { useVerifySubmissionByStaff } from '@/hooks/use-staff'
 import { useMoaIASubmissionsDetailForStaff } from '@/hooks/use-submission'
-import type { ActivityType, SubmissionStatus } from '@/types/submission.type'
+import type { ActivityType } from '@/types/submission.type'
 import { toSpringSort, type QueryParams } from '@/types/table.types'
 import type { PaginationState, SortingState } from '@tanstack/react-table'
 import { ArrowLeft, Loader2, X } from 'lucide-react'
@@ -93,11 +93,10 @@ const DashboardStaffTrackDetailSubmission = () => {
   const { isPending: isVerifying, mutate: verifySubmission } = useVerifySubmissionByStaff();
 
   const handleVerifyDocument = useCallback(
-    (submissionId: string, submissionStatus: SubmissionStatus) => {
+    (submissionId: string ) => {
       setVerifyingSubmissionId(submissionId);
 
-      verifySubmission(
-        { submissionId, submissionStatus },
+      verifySubmission(submissionId ,
         {
           onSettled: () => {
             setVerifyingSubmissionId(null);
@@ -111,8 +110,8 @@ const DashboardStaffTrackDetailSubmission = () => {
   const columns = useMemo(
     () =>
       getSubmissionsMoaIaDetailForStaffColumns({
-        onVerifyDocument: (submissionId, request) => {
-          handleVerifyDocument(submissionId, request.submissionStatus);
+        onVerifyDocument: (submissionId) => {
+          handleVerifyDocument(submissionId);
         },
         onFillFacultyLetterNumber: (submissionId) => {
           console.log("fill letter number", submissionId);

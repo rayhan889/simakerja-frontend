@@ -1,24 +1,17 @@
 import { staffService } from "@/api/services/staff.service";
-import type { StaffVerifySubmissionRequest } from "@/types/staff.type";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { submissionKeys } from "./use-submission";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
-type StaffVerifySubmissionVariables = {
-  submissionId: string;
-} & StaffVerifySubmissionRequest;
-
 export function useVerifySubmissionByStaff() {
         const queryClient = useQueryClient();
 
         return useMutation({
-            mutationFn: async (variables: StaffVerifySubmissionVariables) => {
-            const { submissionId, submissionStatus } = variables;
+            mutationFn: async (submissionId: string) => {
 
             const response = await staffService.updateSubmissionStatusToVerifiedByStaff(
                 submissionId,
-                { submissionStatus },
             );
 
             if (response === null) {
@@ -32,13 +25,13 @@ export function useVerifySubmissionByStaff() {
             return response;
         },
 
-        onSuccess: async (_data, variables) => {
+        onSuccess: async (_data, submissionId) => {
             await queryClient.invalidateQueries({
                 queryKey: submissionKeys.all,
             });
 
             await queryClient.invalidateQueries({
-                queryKey: submissionKeys.details(variables.submissionId),
+                queryKey: submissionKeys.details(submissionId),
             });
 
             toast.success("Pengajuan berhasil diverifikasi.");
