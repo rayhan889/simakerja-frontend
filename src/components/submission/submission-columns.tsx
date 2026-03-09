@@ -1,15 +1,8 @@
-import { activityLabels, documentTypeLabels, type DocumentActivity, type MoAIASubmission, type Submission } from "@/types/submission.type";
+import { documentTypeLabels, type MoAIASubmission } from "@/types/submission.type";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Eye, MoreHorizontal } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const submissionColumnHelper = createColumnHelper<Submission>();
 const moaIaSubmissionColumnHelper = createColumnHelper<MoAIASubmission>();
-
-// TODO: lengkapi kolom habis endpoint jadi
-// export const submissionColumns: ColumnDef<Submission, unknown>[] = [
-//     submissionColumnHelper.accessor()
-// ]
 
 export const moaIASubmissionColumns: ColumnDef<MoAIASubmission, never>[] = [
     moaIaSubmissionColumnHelper.accessor('partnerName', {
@@ -19,7 +12,7 @@ export const moaIASubmissionColumns: ColumnDef<MoAIASubmission, never>[] = [
         const partnerNumber = info.row.original.partnerNumber;
         
         return (
-            <div className="max-w-[200px]">
+            <div className="max-w-50">
                 <p 
                     className="font-medium text-gray-900 truncate" 
                     title={partnerName}
@@ -48,19 +41,6 @@ export const moaIASubmissionColumns: ColumnDef<MoAIASubmission, never>[] = [
     enableSorting: true,
   }),
 
-  moaIaSubmissionColumnHelper.accessor('documentActivity', {
-    header: 'Bentuk Kerjasama',
-    cell: (info) => {
-      const activity = info.getValue() as DocumentActivity;
-      return (
-        <span className="text-gray-600">
-          {activityLabels[activity] || activity}
-        </span>
-      );
-    },
-    enableSorting: true,
-  }),
-
   moaIaSubmissionColumnHelper.accessor(
     (row) => row.studentSnapshot.total,
     {
@@ -78,7 +58,7 @@ export const moaIASubmissionColumns: ColumnDef<MoAIASubmission, never>[] = [
   moaIaSubmissionColumnHelper.accessor('facultyRepresentativeName', {
     header: 'Perwakilan Fakultas',
     cell: (info) => (
-      <span className="text-gray-600 truncate max-w-[150px] block">
+      <span className="text-gray-600 truncate max-w-37.5 block">
         {info.getValue()}
       </span>
     ),
@@ -92,7 +72,7 @@ export const moaIASubmissionColumns: ColumnDef<MoAIASubmission, never>[] = [
       const position = info.row.original.partnerRepresentativePosition;
       
       return (
-        <div className="max-w-[150px]">
+        <div className="max-w-37.5">
           <p className="text-gray-900 truncate">{name}</p>
           <p className="text-xs text-gray-500 truncate">{position}</p>
         </div>

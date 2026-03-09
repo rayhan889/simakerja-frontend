@@ -11,7 +11,7 @@ export interface UserColumnOptions {
 
 export function getUserColumns(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    options: UserColumnOptions = {}
+    _options: UserColumnOptions = {}
 ): ColumnDef<CreatedUser, never>[] {
     return [
         userColumnHelper.accessor('email', {
