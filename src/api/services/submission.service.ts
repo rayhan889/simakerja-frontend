@@ -1,7 +1,7 @@
 import type { ApiResponse } from "@/types/auth.types";
 import { apiClient } from "@/api/client";
 import { AxiosError } from "axios";
-import type { CreateMoAIASubmissionRequest, MoAIASubmission, StaffSubmissionPagination, StaffSubmissionPaginationDetail, Submission, SubmissionDetails, SubmissionsByUserIdAndMoAIAType, UpdateMoaIaSubmissionRequest } from "@/types/submission.type";
+import type { CreateMoAIASubmissionRequest, LecturerSubmissionPagination, LecturerSubmissionPaginationDetail, MoAIASubmission, StaffSubmissionPagination, StaffSubmissionPaginationDetail, Submission, SubmissionDetails, SubmissionsByUserIdAndMoAIAType, UpdateMoaIaSubmissionRequest } from "@/types/submission.type";
 import type { PaginationResponse } from "@/types/pagination.type";
 import type { QueryParams, SearchParams } from "@/types/table.types";
 import type { PartnerAndFacultyProfile } from '../../types/submission.type';
@@ -240,5 +240,59 @@ export const submissionService = {
           }
           throw error
       }
-    }
+    },
+
+    getLecturerSubmissionsPagination: async (
+      params: QueryParams,
+    ): Promise<PaginationResponse<LecturerSubmissionPagination> | null> => {
+      try {
+        const response = await apiClient.get<ApiResponse<PaginationResponse<LecturerSubmissionPagination>>>(
+            '/submissions/moa-ia/adhoc',
+            {
+                params: {
+                    page: params.page,
+                    size: params.size,
+                    ...(params.sort && { sort: params.sort }),
+                    ...(params.search && { search: params.search }),
+                }
+            }
+        );
+        return response.data.data;
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 401) {
+            return null;
+          }
+          throw error
+      }
+    },
+
+    getLecturerSubmissionsPaginationDetail: async (
+      params: QueryParams,
+      partnerName: string,
+      period: string,
+      activityType: string,
+    ): Promise<PaginationResponse<LecturerSubmissionPaginationDetail> | null> => {
+      try {
+        const response = await apiClient.get<ApiResponse<PaginationResponse<LecturerSubmissionPaginationDetail>>>(
+            '/submissions/moa-ia/detail/adhoc',
+            {
+                params: {
+                    page: params.page,
+                    size: params.size,
+                    ...(params.sort && { sort: params.sort }),
+                    ...(params.search && { search: params.search }),
+                    ...(partnerName && { partner_name: partnerName }),
+                    ...(period && { period }),
+                    ...(activityType && { activity_type: activityType }),
+                }
+            }
+        );
+        return response.data.data;
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 401) {
+            return null;
+          }
+          throw error
+      }
+    },
 }

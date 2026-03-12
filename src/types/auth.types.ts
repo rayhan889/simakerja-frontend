@@ -16,7 +16,8 @@ export interface AuthUser {
     role: UserRole;
     fullName: string;
     nim?: string;
-    nip?: string
+    nip?: string;
+    nidn?: string;
     studyProgram?: string;
     phoneNumber?: string;
     status: AuthStatus;

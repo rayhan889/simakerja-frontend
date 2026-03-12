@@ -3,15 +3,16 @@ import type { Submission, UpdateSubmissionFromAdhocOrStaffRequest } from "@/type
 import { AxiosError } from "axios";
 import { apiClient } from "../client";
 
-export const staffService = {
 
-    processSubmissionByStaff: async (
+export const lecturerService = {
+
+    processSubmissionByLecturer: async (
         submissionId: string,
         request: UpdateSubmissionFromAdhocOrStaffRequest
     ): Promise<ApiResponse<Submission> | null> => {
         try {
             const response = await apiClient.put<ApiResponse<Submission>>(
-                `/staffs/process-moa-ia/${submissionId}`,
+                `/adhocs/process-moa-ia/${submissionId}`,
                 request
             );
             return response.data;

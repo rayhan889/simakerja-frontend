@@ -1,34 +1,24 @@
-import { DataTable } from '@/components/data-table/data-table'
-import { DataTableSearch } from '@/components/data-table/data-table-search'
-import { getSubmissionsMoaIaDetailForStaffColumns } from '@/components/submission/submissions-moa-ia-detail-for-staff-column'
-import { Button } from '@/components/ui/button'
-import { useMoaIASubmissionsDetailForStaff } from '@/hooks/use-submission'
-import type { ActivityType } from '@/types/submission.type'
-import { toSpringSort, type QueryParams } from '@/types/table.types'
-import type { PaginationState, SortingState } from '@tanstack/react-table'
-import { ArrowLeft, Loader2, X } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { DataTable } from "@/components/data-table/data-table"
+import { DataTableSearch } from "@/components/data-table/data-table-search"
+import { getSubmissionsMoaIaDetailForLecturerColumns } from "@/components/submission/submissions-moa-ia-detail-for-lecturer-column"
+import { Button } from "@/components/ui/button"
+import { useMoaIASubmissionsDetailForLecturer } from "@/hooks/use-submission"
+import { activityLabels, type ActivityType } from "@/types/submission.type"
+import { toSpringSort, type QueryParams } from "@/types/table.types"
+import type { PaginationState, SortingState } from "@tanstack/react-table"
+import { ArrowLeft, Loader2, X } from "lucide-react"
+import { useCallback, useMemo, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router"
 
-const DashboardStaffTrackDetailSubmission = () => {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+const DashboardLecturerTrackSubmissionDetail = () => {
 
-  const period = searchParams.get("period") || ""
-  const partnerName = searchParams.get("partnerName") || ""
-  const activityTypeParam = (searchParams.get("activityType") ||
-    "") as ActivityType
+    const [searchParams] = useSearchParams()
+    const navigate = useNavigate()
 
-    const displayActivityType = useMemo(() => {
-        switch (activityTypeParam) {
-            case 'internship':
-                return 'Magang'
-            case 'kkn':
-                return 'KKN'
-            default:
-                return activityTypeParam
-        }
-    }, [activityTypeParam])
+    const period = searchParams.get("period") || ""
+    const partnerName = searchParams.get("partnerName") || ""
+    const activityTypeParam = (searchParams.get("activityType") ||
+        "") as ActivityType
 
     const displayFormattedPeriod = useMemo(() => {
         if (!period) return ""
@@ -37,63 +27,63 @@ const DashboardStaffTrackDetailSubmission = () => {
         return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })
     }, [period])
 
-  const missingRequired =
-    !period || !partnerName || !activityTypeParam
+    const missingRequired =
+        !period || !partnerName || !activityTypeParam
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 10,
+    })
 
-  const [sorting, setSorting] = useState<SortingState>([])
+    const [sorting, setSorting] = useState<SortingState>([])
 
-  const [search, setSearch] = useState<string>("")
+    const [search, setSearch] = useState<string>("")
 
-  const queryParams = useMemo<QueryParams>(
-    () => ({
-      page: pagination.pageIndex,
-      size: pagination.pageSize,
-      sort: toSpringSort(sorting),
-      search: search.trim() || undefined,
-    }),
-    [pagination.pageIndex, pagination.pageSize, sorting, search],
-  )
+    const queryParams = useMemo<QueryParams>(
+        () => ({
+        page: pagination.pageIndex,
+        size: pagination.pageSize,
+        sort: toSpringSort(sorting),
+        search: search.trim() || undefined,
+        }),
+        [pagination.pageIndex, pagination.pageSize, sorting, search],
+    )
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-  } = useMoaIASubmissionsDetailForStaff(
-    queryParams,
-    partnerName,
-    period,
-    activityTypeParam,
-  )
+    const {
+        data,
+        isLoading,
+        isFetching,
+        isError,
+        error,
+    } = useMoaIASubmissionsDetailForLecturer(
+        queryParams,
+        partnerName,
+        period,
+        activityTypeParam,
+    )
 
-  const tableData = data?.content ?? []
-  const totalItems = data?.totalElements ?? 0
-  const totalPages = data?.totalPages ?? 0
+    const tableData = data?.content ?? []
+    const totalItems = data?.totalElements ?? 0
+    const totalPages = data?.totalPages ?? 0
 
-  const handleProcessDocument = useCallback(
-      (submissionId: string) => {
-          navigate(`/dashboard/staff-process-submission/${submissionId}`)
-      },
-      [navigate],
-  )
-  const columns = useMemo(
-    () =>
-      getSubmissionsMoaIaDetailForStaffColumns({
-        onProcessSubmission: handleProcessDocument,
-      }),
-    [handleProcessDocument],
-  );
-  
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value)
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-  }, [])
+    const handleProcessDocument = useCallback(
+        (submissionId: string) => {
+            navigate(`/dashboard/lecturer-process-submission/${submissionId}`)
+        },
+        [navigate],
+    )
+
+    const columns = useMemo(
+        () => getSubmissionsMoaIaDetailForLecturerColumns({
+            onProcessSubmission: handleProcessDocument
+        }),
+        [handleProcessDocument],
+    );
+    
+    const handleSearchChange = useCallback((value: string) => {
+        setSearch(value)
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    }, [])
 
   if (missingRequired) {
     return (
@@ -129,12 +119,12 @@ const DashboardStaffTrackDetailSubmission = () => {
           <p className="mt-2 text-sm text-red-600">
             {error?.message || 'Terjadi kesalahan saat memuat data pengajuan.'}
           </p>
-          <button
-            onClick={() => window.location.reload()}
+          <Button
+            onClick={() => globalThis.location.reload()}
             className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
           >
             Coba Lagi
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -145,9 +135,8 @@ const DashboardStaffTrackDetailSubmission = () => {
         <Button
             variant={'link'}
             className='cursor-pointer'
-            onClick={() => navigate('/dashboard/staff-track-submission')}
         >
-            <span className='text-sm'>
+            <span className='text-sm' onClick={() => navigate('/dashboard/lecturer-track-submission')}>
                 <ArrowLeft className="h-4 w-4 inline mr-1" /> Kembali ke Daftar Pengajuan
             </span>
         </Button>
@@ -166,7 +155,7 @@ const DashboardStaffTrackDetailSubmission = () => {
             
             <div className='flex flex-col items-start w-full'>
                 <p className='text-sm text-gray-500'>Jenis Kegiatan</p>
-                <span className='font-medium'>{displayActivityType}</span>
+                <span className='font-medium'>{activityLabels[activityTypeParam] || activityTypeParam}</span>
             </div>
 
         </div>
@@ -214,4 +203,4 @@ const DashboardStaffTrackDetailSubmission = () => {
   )
 }
 
-export default DashboardStaffTrackDetailSubmission
+export default DashboardLecturerTrackSubmissionDetail

@@ -1,43 +1,23 @@
 import { displayFullName } from "@/lib/display-fullname";
-import { studyProgramOptions, type StaffSubmissionPaginationDetail } from "@/types/submission.type";
+import type { LecturerSubmissionPaginationDetail, SubmissionStatus } from "@/types/submission.type";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { FileSearchCorner } from "lucide-react";
 import { Badge } from "../ui/badge";
-import type { SubmissionStatus } from '../../types/submission.type';
+import { FileSearchCorner } from "lucide-react";
 import { displaySubmissionStatus, getStatusBadgeColor } from "@/lib/display-status";
 
-const submissionsMoaIaDetailForStaffColumnHelper = createColumnHelper<StaffSubmissionPaginationDetail>();
 
-export interface SubmissionsMoaIaDetailForStaffColumnOptions {
+const submissionsMoaIaDetailForLecturerColumnHelper = createColumnHelper<LecturerSubmissionPaginationDetail>();
+
+export type SubmissionsMoaIaDetailForLecturerColumnOptions = {
     onProcessSubmission?: (submissionId: string) => void;
 }
 
-export function getSubmissionsMoaIaDetailForStaffColumns(
-    options: SubmissionsMoaIaDetailForStaffColumnOptions = {}
-): ColumnDef<StaffSubmissionPaginationDetail, never>[] {
+export function getSubmissionsMoaIaDetailForLecturerColumns(
+    options: SubmissionsMoaIaDetailForLecturerColumnOptions = {}
+): ColumnDef<LecturerSubmissionPaginationDetail, never>[] {
     return [
-        submissionsMoaIaDetailForStaffColumnHelper.accessor('applicantStudyProgram', {
-            header: 'Asal Prodi',
-            cell: (info) => {
-                const applicantStudyProgram = info.getValue() as string;
 
-                const studyProgramLabel = studyProgramOptions.find(option => option.value === info.getValue())?.label || applicantStudyProgram;
-
-                return (
-                    <div className="max-w-50">
-                        <p 
-                            className="font-medium text-gray-900 truncate" 
-                            title={applicantStudyProgram}
-                        >
-                            {studyProgramLabel}
-                        </p>
-                    </div>
-                );
-            },
-            enableSorting: true, 
-        }),
-
-        submissionsMoaIaDetailForStaffColumnHelper.accessor('applicantFullname', {
+        submissionsMoaIaDetailForLecturerColumnHelper.accessor('applicantFullname', {
             header: 'Nama Pemohon',
             cell: (info) => {
                 const applicantFullname = displayFullName(info.getValue() as string);
@@ -46,7 +26,7 @@ export function getSubmissionsMoaIaDetailForStaffColumns(
                 return (
                     <div className="max-w-50">
                         <p 
-                            className="font-medium text-gray-900 truncate capitalize" 
+                            className="font-medium text-gray-900 capitalize" 
                             title={applicantFullname}
                         >
                             {applicantFullname}
@@ -60,7 +40,7 @@ export function getSubmissionsMoaIaDetailForStaffColumns(
             enableSorting: true, 
         }),
 
-        submissionsMoaIaDetailForStaffColumnHelper.accessor('submissionStatus', {
+        submissionsMoaIaDetailForLecturerColumnHelper.accessor('submissionStatus', {
             header: 'Status',
             cell: (info) => {
                 const status = info.getValue() as SubmissionStatus;
@@ -76,7 +56,7 @@ export function getSubmissionsMoaIaDetailForStaffColumns(
             enableSorting: false
         }),
 
-        submissionsMoaIaDetailForStaffColumnHelper.display({
+        submissionsMoaIaDetailForLecturerColumnHelper.display({
             id: 'actions', 
             header: '',    
             cell: (info) => {

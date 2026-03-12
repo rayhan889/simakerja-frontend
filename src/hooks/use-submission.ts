@@ -1,5 +1,8 @@
 import { submissionService } from "@/api/services/submission.service";
-import type { CreateMoAIASubmissionRequest, UpdateMoaIaSubmissionRequest } from "@/types/submission.type";
+import { staffService } from "@/api/services/staff.service";
+import { lecturerService } from "@/api/services/lecturer.service";
+import type { CreateMoAIASubmissionRequest, UpdateMoaIaSubmissionRequest, UpdateSubmissionFromAdhocOrStaffRequest } from "@/types/submission.type";
+import type { ProcessRole } from "@/lib/process-submission-config";
 import type { QueryParams, SearchParams } from "@/types/table.types";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -20,6 +23,8 @@ export const submissionKeys = {
     details: (submissionId: string) => [...submissionKeys.all, 'details', submissionId] as const,
     moaIaForStaffList: (params: QueryParams) => [...submissionKeys.all, 'moa-ia-staff', 'list', params] as const,
     moaIaForStaffDetailList: (params: QueryParams, partnerName?: string, period?: string, activityType?: string) => [...submissionKeys.all, 'moa-ia-staff', 'detail-list', params, { partnerName, period, activityType }] as const,
+    moaIaForLecturerList: (params: QueryParams) => [...submissionKeys.all, 'moa-ia-lecturer', 'list', params] as const,
+    moaIaForLecturerDetailList: (params: QueryParams, partnerName?: string, period?: string, activityType?: string) => [...submissionKeys.all, 'moa-ia-lecturer', 'detail-list', params, { partnerName, period, activityType }] as const,
 }
 
 export function useSubmissions(params: QueryParams) {
@@ -228,9 +233,94 @@ export function useMoaIASubmissionsDetailForStaff(params: QueryParams, partnerNa
     })
 }
 
+export function useMoaIASubmissionsForLecturer(params: QueryParams) {
+    return useQuery({
+        queryKey: submissionKeys.moaIaForLecturerList(params),
+
+        queryFn: () => submissionService.getLecturerSubmissionsPagination(params),
+
+        placeholderData: keepPreviousData,
+
+        staleTime: 10 * 60 * 1000, // 10 minutes
+
+        refetchOnWindowFocus: false,
+
+        retry: 1,
+    })
+}
+
+export function useMoaIASubmissionsDetailForLecturer(params: QueryParams, partnerName: string, period: string, activityType: string) {
+    const hasFilters = !!(partnerName && period && activityType)
+
+    return useQuery({
+        queryKey: submissionKeys.moaIaForLecturerDetailList(params, partnerName, period, activityType),
+        
+        queryFn: () => submissionService.getLecturerSubmissionsPaginationDetail(params, partnerName, period, activityType),
+
+        placeholderData: keepPreviousData,
+
+        staleTime: 10 * 60 * 1000, // 10 minutes
+
+        refetchOnWindowFocus: false,
+
+        retry: 1,
+
+        enabled: hasFilters,
+    })
+}
+
 export type SubmissionResult = ReturnType<typeof useSubmissions>;
 export type MoAIASubmissionResult = ReturnType<typeof useMoaIASubmissions>;
 export type SubmissionsByUserIdAndMoAIATypeResult = ReturnType<typeof useSubmissionsByUserIdAndMoAIAType>;
 export type SubmissionDetailsResult = ReturnType<typeof useSubmissionDetails>;
 export type MoAIASubmissionsForStaffResult = ReturnType<typeof useMoaIASubmissionsForStaff>;
 export type MoAIASubmissionsDetailForStaffResult = ReturnType<typeof useMoaIASubmissionsDetailForStaff>;
+export type MoAIASubmissionsForLecturerResult = ReturnType<typeof useMoaIASubmissionsForLecturer>;
+export type MoAIASubmissionsDetailForLecturerResult = ReturnType<typeof useMoaIASubmissionsDetailForLecturer>;
+
+export function useProcessSubmission(submissionId: string, role: ProcessRole) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (request: UpdateSubmissionFromAdhocOrStaffRequest) => {
+            const serviceFn = role === 'staff'
+                ? staffService.processSubmissionByStaff
+                : lecturerService.processSubmissionByLecturer;
+
+            const response = await serviceFn(submissionId, request);
+
+            if (response === null) {
+                throw new Error("Sesi anda telah berakhir!. Silahkan login kembali.");
+            }
+
+            if (!response.success) {
+                throw new Error(response.message || "Gagal memproses pengajuan.");
+            }
+
+            return response;
+        },
+
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: submissionKeys.all,
+            });
+
+            await queryClient.invalidateQueries({
+                queryKey: submissionKeys.details(submissionId),
+            });
+
+            toast.success("Pengajuan berhasil diproses.");
+        },
+
+        onError: (error) => {
+            let message = error.message;
+
+            if (error instanceof AxiosError && error.response?.data) {
+                message = error.response.data.message || message;
+            }
+
+            toast.error("Gagal memproses pengajuan: " + message);
+            console.log("failed to process submission: " + message);
+        }
+    })
+}
