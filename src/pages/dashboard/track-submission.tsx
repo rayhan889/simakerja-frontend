@@ -69,7 +69,7 @@ export const DashboardTrackSubmissionPage = () => {
         if (submission.applicantId !== userId) return false;
 
         return (
-          submission.status === "pending" || submission.status === "in_process"
+          submission.status === "pending" || submission.status === "in_process" || submission.status === 'rejected_adhoc'
         );
       },
       [isStudent, userId]

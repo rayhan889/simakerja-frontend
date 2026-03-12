@@ -47,6 +47,10 @@ const superadminNavItems: NavItem[] = [
    { icon: Users, label: "Lacak Pengguna", href: "/dashboard/admin-track-users", active: false },
 ]
 
+const lecturerNavItems: NavItem[] = [
+  { icon: FileText, label: "Lacak Dokumen", href: "/dashboard/lecturer-track-submission", active: false },
+]
+
 function getNavItemsByRole(role: UserRole): NavItem[] {
   switch (role) {
     case 'student':
@@ -55,6 +59,8 @@ function getNavItemsByRole(role: UserRole): NavItem[] {
       return [...baseNavItems, ...staffNavItems];
     case 'superadmin':
       return [...baseNavItems, ...superadminNavItems];
+    case 'lecturer':
+      return [...baseNavItems, ...lecturerNavItems];
     default:
       return baseNavItems;
   }

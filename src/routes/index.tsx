@@ -11,6 +11,9 @@ import DashboardUpdateUserPage from '@/pages/dashboard/update-user'
 import DashboardStaffTrackSubmission from '@/pages/dashboard/staff-track-submission'
 import DashboardStaffTrackDetailSubmission from '@/pages/dashboard/staff-track-detail-submission'
 import DashboardListUserPage from '@/pages/dashboard/list-user'
+import DashboardLecturerTrackSubmissionPage from '@/pages/dashboard/lecturer-track-submission'
+import DashboardLecturerTrackSubmissionDetailPage from '@/pages/dashboard/lecturer-track-detail-submission'
+import ProcessSubmissionPage from '@/pages/dashboard/process-submission'
 
 const router = createBrowserRouter([
     {
@@ -24,7 +27,7 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: (
-            <ProtectedRoute allowedRoles={['student', 'staff', 'superadmin']}>
+            <ProtectedRoute allowedRoles={['student', 'staff', 'superadmin', 'lecturer']}>
                 <DashboardLayout />
             </ProtectedRoute>
         ),
@@ -82,6 +85,38 @@ const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute allowedRoles={['staff', 'superadmin']}>
                         <DashboardStaffTrackDetailSubmission />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/lecturer-track-submission",
+                element: (
+                    <ProtectedRoute allowedRoles={['lecturer', 'superadmin']}>
+                        <DashboardLecturerTrackSubmissionPage />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/lecturer-track-detail-submission",
+                element: (
+                    <ProtectedRoute allowedRoles={['lecturer', 'superadmin']}>
+                        <DashboardLecturerTrackSubmissionDetailPage />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/lecturer-process-submission/:submissionId",
+                element: (
+                    <ProtectedRoute allowedRoles={['lecturer', 'superadmin']}>
+                        <ProcessSubmissionPage />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "/dashboard/staff-process-submission/:submissionId",
+                element: (
+                    <ProtectedRoute allowedRoles={['staff', 'superadmin']}>
+                        <ProcessSubmissionPage />
                     </ProtectedRoute>
                 )
             },

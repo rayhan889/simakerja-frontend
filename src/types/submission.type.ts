@@ -2,7 +2,7 @@ import type { StudentInfo, User } from "./user.type";
 
 export type SubmissionType = 'moa_ia' | 'mou' | 'visit_request' | 'cooperation_request';
 
-export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 'verified_staff' |  'rejected' | 'completed';
+export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 'verified_staff' |  'rejected' | 'completed' | 'rejected_adhoc' | 'rejected_staff';
 
 export type MoAIASubmissionType = 'moa' | 'ia' | 'moa_ia';
 
@@ -12,6 +12,17 @@ export const activityLabels: Record<ActivityType, string> = {
   internship: 'Magang',
   study_independent: 'Studi Independen',
   kkn: 'KKN'
+};
+
+export const submissionStatusLabels: Record<SubmissionStatus, string> = {
+  pending: 'Menunggu Verifikasi',
+  in_process: 'Sedang Diproses',
+  verified_adhoc: 'Terverifikasi Adhoc',
+  verified_staff: 'Terverifikasi Staff',
+  rejected: 'Ditolak',
+  completed: 'Selesai',
+  rejected_adhoc: 'Ditolak Adhoc',
+  rejected_staff: 'Ditolak Staff'
 };
 
 export const documentTypeLabels: Record<string, string> = {
@@ -125,7 +136,7 @@ export interface SubmissionDetails {
     id: string;
     user: User;
     submissionCode: string;
-    submissionStatus: SubmissionStatus;
+    status: SubmissionStatus;
     notes: string;
     faculty: string;
     submissionDate: string;
@@ -154,6 +165,27 @@ export interface StaffSubmissionPaginationDetail {
     submissionId: string;
     submissionCode: string;
     applicantStudyProgram: string;
+    applicantFullname: string;
+    applicantNim: string;
+    submissionStatus: SubmissionStatus;
+}
+
+export interface UpdateSubmissionFromAdhocOrStaffRequest {
+    submissionStatus: SubmissionStatus;
+    notes?: string;
+}
+
+export interface LecturerSubmissionPagination {
+    period: string;
+    partnerName: string;
+    partnerNumber: string;
+    activityType: ActivityType;
+    totalSubmissions: number;
+}
+
+export interface LecturerSubmissionPaginationDetail {
+    submissionId: string;
+    submissionCode: string;
     applicantFullname: string;
     applicantNim: string;
     submissionStatus: SubmissionStatus;

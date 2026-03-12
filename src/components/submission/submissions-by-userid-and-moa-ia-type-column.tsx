@@ -3,6 +3,7 @@ import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "../ui/badge";
 import { Pencil, FileText } from "lucide-react";
 import { displayFullName } from "@/lib/display-fullname";
+import { displaySubmissionStatus, getStatusBadgeColor } from "@/lib/display-status";
 
 
 const submissionByUserIdAndMoATypeColumnHelper = createColumnHelper<SubmissionsByUserIdAndMoAIAType>();
@@ -110,23 +111,9 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                 return (
                     <Badge 
                         variant={'secondary'}
-                        className={`
-                            ${status == 'pending' ? 'bg-yellow-600/20' : 
-                            status == 'in_process' ? 'bg-blue-600/20' : 
-                            status == 'verified_adhoc' ? 'bg-green-600/20' : 
-                            status == 'verified_staff' ? 'bg-green-600/20' : 
-                            status == 'rejected' ? 'bg-red-600/20' : 
-                            status == 'completed' ? 'bg-gray-600/20' : 'transparent'}
-                        `}
+                        className={getStatusBadgeColor(status)}
                     >
-                        {
-                            status == 'pending' ? 'Pending' :
-                            status == 'in_process' ? 'Dalam Proses' :
-                            status == 'verified_adhoc' ? 'Terverifikasi Adhoc' :
-                            status == 'verified_staff' ? 'Terverifikasi Staff' :
-                            status == 'rejected' ? 'Ditolak' :
-                            status == 'completed' ? 'Selesai' : status
-                        }
+                        {displaySubmissionStatus(status)}
                     </Badge>
                 );
             },

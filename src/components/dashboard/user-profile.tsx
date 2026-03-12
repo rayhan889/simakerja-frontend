@@ -57,6 +57,7 @@ export const DashboardUserProfile = () => {
     const isStudent = user?.role === 'student';
     const isStaff = user?.role === 'staff';
     const isSuperAdmin = user?.role === 'superadmin';
+    const isLecturer = user?.role === 'lecturer';
   return (
     <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 relative overflow-hidden">
         
@@ -112,6 +113,15 @@ export const DashboardUserProfile = () => {
 
             {isSuperAdmin && (
                 <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} accentColor="violet" />
+            )}
+
+            {isLecturer && (
+              <>
+                <DetailItem icon={User} label="Nama" value={displayFullName(user?.fullName || "-")} accentColor="violet" />
+                <DetailItem icon={IdCard} label="NIP" value={user?.nip || "-"} accentColor="teal" />
+                <DetailItem icon={IdCard} label="Program Studi" value={studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"} accentColor="sky" />
+                <DetailItem icon={IdCard} label="NIDN" value={user?.nidn || "-"} accentColor="green" />
+              </>
             )}
         </div>
 
