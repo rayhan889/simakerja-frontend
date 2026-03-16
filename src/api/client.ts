@@ -1,5 +1,6 @@
 import axios, {type InternalAxiosRequestConfig, AxiosError} from 'axios';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/store/auth.store';
 
 let accessToken: string | null = null
 
@@ -56,7 +57,6 @@ const processQueue = (token: string | null, error: unknown = null) => {
 }
 
 const clearAuthStore = async () => {
-    const { useAuthStore } = await import('@/store/auth.store');
     useAuthStore.setState({
         user: null,
         isAuthenticated: false,
