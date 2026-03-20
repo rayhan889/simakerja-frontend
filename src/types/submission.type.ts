@@ -2,33 +2,33 @@ import type { StudentInfo, User } from "./user.type";
 
 export type SubmissionType = 'moa_ia' | 'mou' | 'visit_request' | 'cooperation_request';
 
-export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 'verified_staff' |  'rejected' | 'completed' | 'rejected_adhoc' | 'rejected_staff';
+export type SubmissionStatus = 'pending' | 'in_process' | 'verified_adhoc' | 'verified_staff' | 'rejected' | 'completed' | 'rejected_adhoc' | 'rejected_staff';
 
 export type MoAIASubmissionType = 'moa' | 'ia' | 'moa_ia';
 
 export type ActivityType = 'internship' | 'study_independent' | 'kkn';
 
 export const activityLabels: Record<ActivityType, string> = {
-  internship: 'Magang',
-  study_independent: 'Studi Independen',
-  kkn: 'KKN'
+    internship: 'Magang',
+    study_independent: 'Studi Independen',
+    kkn: 'KKN'
 };
 
 export const submissionStatusLabels: Record<SubmissionStatus, string> = {
-  pending: 'Menunggu Verifikasi',
-  in_process: 'Sedang Diproses',
-  verified_adhoc: 'Terverifikasi Adhoc',
-  verified_staff: 'Terverifikasi Staff',
-  rejected: 'Ditolak',
-  completed: 'Selesai',
-  rejected_adhoc: 'Ditolak Adhoc',
-  rejected_staff: 'Ditolak Staff'
+    pending: 'Menunggu Verifikasi',
+    in_process: 'Sedang Diproses',
+    verified_adhoc: 'Terverifikasi Adhoc',
+    verified_staff: 'Terverifikasi Staff',
+    rejected: 'Ditolak',
+    completed: 'Selesai',
+    rejected_adhoc: 'Ditolak Adhoc',
+    rejected_staff: 'Ditolak Staff'
 };
 
 export const documentTypeLabels: Record<string, string> = {
-  moa: 'MoA',
-  ia: 'IA',
-  moa_ia: 'MoA & IA Terintegrasi'
+    moa: 'MoA',
+    ia: 'IA',
+    moa_ia: 'MoA & IA Terintegrasi'
 };
 
 export interface Submission {
@@ -93,6 +93,8 @@ export interface MoaIaDetails {
     partnerAddress: string;
     partnerLogoKey: string;
     partnerCooperationPeriod: number;
+    scannedDocumentKey?: string;
+    averageConfidence?: number;
 }
 
 export interface CreateMoAIASubmissionRequest {
@@ -130,6 +132,8 @@ export interface MoaIaUpdateDetailRequest {
     studentSnapshots: Array<StudentSnapshotRequest>;
     partnerLogoKey: string;
     partnerCooperationPeriod: number;
+    scannedDocumentKey?: string | null;
+    averageConfidence?: number | null;
 }
 
 export interface SubmissionDetails {
@@ -145,6 +149,9 @@ export interface SubmissionDetails {
     facultyAddress: string;
     createdAt: string;
     updatedAt: string;
+
+    lecturerVerifiedAt?: string;
+    staffVerifiedAt?: string;
 
     moaIa?: MoaIaDetails | null;
 }
@@ -192,16 +199,16 @@ export interface LecturerSubmissionPaginationDetail {
 }
 
 export const studyProgramOptions = [
-  { value: 'teknik_informatika', label: 'Teknik Informatika' },
-  { value: 'sistem_informasi', label: 'Sistem Informasi' },
-  { value: 'pendidikan_teknologi_informasi', label: 'Pendidikan Teknologi Informasi' },
+    { value: 'teknik_informatika', label: 'Teknik Informatika' },
+    { value: 'sistem_informasi', label: 'Sistem Informasi' },
+    { value: 'pendidikan_teknologi_informasi', label: 'Pendidikan Teknologi Informasi' },
 ];
 
 export const partnerCooperationPeriodOptions = [
-  { value: 1, label: '1 Tahun' },
-  { value: 3, label: '3 Tahun' },
-  { value: 5, label: '5 Tahun' },
-  { value: 7, label: '7 Tahun' },
+    { value: 1, label: '1 Tahun' },
+    { value: 3, label: '3 Tahun' },
+    { value: 5, label: '5 Tahun' },
+    { value: 7, label: '7 Tahun' },
 ];
 
 export type StudyProgram = typeof studyProgramOptions[number]['value'];

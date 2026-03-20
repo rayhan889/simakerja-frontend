@@ -23,10 +23,10 @@ export const fileUploadService = {
             );
             return response.data;
         } catch (error) {
-           if (error instanceof AxiosError && error.response?.status === 401) {
-            return null;
-          }
-          throw error
+            if (error instanceof AxiosError && error.response?.status === 401) {
+                return null;
+            }
+            throw error
         }
     },
 
@@ -42,10 +42,39 @@ export const fileUploadService = {
             );
             return response.data;
         } catch (error) {
-           if (error instanceof AxiosError && error.response?.status === 401) {
-            return null;
-          }
-          throw error
+            if (error instanceof AxiosError && error.response?.status === 401) {
+                return null;
+            }
+            throw error
         }
-    }
+    },
+
+    uploadScannedDocument: async (
+        file: File,
+        submissionId: string
+    ): Promise<ApiResponse<FileUploadResponse> | null> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await apiClient.post<ApiResponse<FileUploadResponse>>(
+                `/uploads/scanned-document`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    params: {
+                        submission_id: submissionId,
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError && error.response?.status === 401) {
+                return null;
+            }
+            throw error
+        }
+    },
 }

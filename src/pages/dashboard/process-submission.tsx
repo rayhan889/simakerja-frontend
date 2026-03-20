@@ -1,6 +1,6 @@
 import { useGenerateFile } from '@/hooks/use-generate-file';
-import { ArrowLeft, Loader2, X } from 'lucide-react';
-import { useEffect, useMemo } from 'react'
+import { ArrowLeft, CheckCheck, CircleX, Loader2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router';
 import * as z from 'zod'
 
@@ -27,6 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { submissionStatusLabels } from '@/types/submission.type';
@@ -41,6 +47,7 @@ import {
   allVisibleStatuses,
   type ProcessRole,
 } from '@/lib/process-submission-config';
+import { useGetPresignedUrlPartnerLogo } from '@/hooks/use-file-upload';
 
 const ProcessSubmissionPage = () => {
   const navigate = useNavigate();
@@ -50,13 +57,12 @@ const ProcessSubmissionPage = () => {
 
   const { submissionId } = useParams<{ submissionId: string }>();
 
-  const { pdfBlobUrl, isLoading, isError, error } = useGenerateFile(submissionId ?? null);
+  const { pdfBlobUrl, isLoading: isLoadingGenerateFile, isError, error } = useGenerateFile(submissionId ?? null);
 
-  useEffect(() => {
-    if (pdfBlobUrl) {
-      URL.revokeObjectURL(pdfBlobUrl);
-    }
-  }, [pdfBlobUrl]);
+  const { mutate: getPresignedUrl } = useGetPresignedUrlPartnerLogo();
+
+  const [scannedDocumentPreviewUrl, setScannedDocumentPreviewUrl] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'preview' | 'scanned'>('preview');
 
   const { mutate: process, isPending } = useProcessSubmission(submissionId ?? '', role);
 
@@ -65,6 +71,37 @@ const ProcessSubmissionPage = () => {
     isLoading: isLoadingSubmission,
     isError: isSubmissionError,
   } = useSubmissionDetails(submissionId || '');
+  const moaIa = submissionResponse?.data?.moaIa;
+  const isBothVerified = !!(submissionResponse?.data?.lecturerVerifiedAt && submissionResponse?.data?.staffVerifiedAt);
+
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [pdfBlobUrl]);
+
+  useEffect(() => {
+    if (moaIa?.scannedDocumentKey) {
+      const fetchUrl = () => {
+        getPresignedUrl(moaIa.scannedDocumentKey as string, {
+          onSuccess: (response) => {
+            setScannedDocumentPreviewUrl(response);
+          },
+          onError: (error) => {
+            console.log("error getting presigned URL for scanned document: " + error.message)
+          }
+        });
+      };
+
+      fetchUrl();
+
+      const intervalId = setInterval(fetchUrl, 14 * 60 * 1000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [moaIa?.scannedDocumentKey, getPresignedUrl]);
 
   const informationItems = [
     {
@@ -97,23 +134,23 @@ const ProcessSubmissionPage = () => {
   ];
 
   const processSubmissionSchema = useMemo(() => {
-  const currentStatus = submissionResponse?.data?.status;
-  const allowedStatuses = currentStatus && !config.selectableStatuses.includes(currentStatus)
-    ? [...config.selectableStatuses, currentStatus]
-    : config.selectableStatuses;
+    const currentStatus = submissionResponse?.data?.status;
+    const allowedStatuses = currentStatus && !config.selectableStatuses.includes(currentStatus)
+      ? [...config.selectableStatuses, currentStatus]
+      : config.selectableStatuses;
 
     return z.object({
-        submissionStatus: z.enum(
+      submissionStatus: z.enum(
         allowedStatuses as [SubmissionStatus, ...SubmissionStatus[]],
         { error: "Status pengajuan harus dipilih" }
-        ),
-        notes: z.string().max(500, "Catatan maksimal 500 karakter").optional(),
+      ),
+      notes: z.string().max(500, "Catatan maksimal 500 karakter").optional(),
     }).refine(
-        (data) => data.submissionStatus !== 'rejected_adhoc' && data.submissionStatus !== 'rejected_staff' || (data.notes && data.notes.trim().length > 0),
-        {
+      (data) => data.submissionStatus !== 'rejected_adhoc' && data.submissionStatus !== 'rejected_staff' || (data.notes && data.notes.trim().length > 0),
+      {
         message: "Catatan harus diisi ketika status rejected",
         path: ["notes"],
-        }
+      }
     );
   }, [config.selectableStatuses, submissionResponse?.data?.status]);
 
@@ -128,31 +165,31 @@ const ProcessSubmissionPage = () => {
     mode: 'onChange',
   });
 
-    const currentFormValues = useWatch({
-        control: form.control,
-        name: ['submissionStatus', 'notes']
-    });
+  const currentFormValues = useWatch({
+    control: form.control,
+    name: ['submissionStatus', 'notes']
+  });
 
-    const originalValues = useMemo(() => {
-        if (submissionResponse?.data) {
-            return {
-            submissionStatus: submissionResponse.data.status,
-            notes: submissionResponse.data.notes || '',
-            };
-        }
-        return null;
-    }, [submissionResponse?.data]);
+  const originalValues = useMemo(() => {
+    if (submissionResponse?.data) {
+      return {
+        submissionStatus: submissionResponse.data.status,
+        notes: submissionResponse.data.notes || '',
+      };
+    }
+    return null;
+  }, [submissionResponse]);
 
 
-    const hasChanges = useMemo(() => {
-        if (!originalValues || !currentFormValues) return false;
-    
-        const [currentStatus, currentNotes] = currentFormValues;
-        return (
-            currentStatus !== originalValues.submissionStatus ||
-            (currentNotes || '') !== originalValues.notes
-        );
-    }, [originalValues, currentFormValues]);
+  const hasChanges = useMemo(() => {
+    if (!originalValues || !currentFormValues) return false;
+
+    const [currentStatus, currentNotes] = currentFormValues;
+    return (
+      currentStatus !== originalValues.submissionStatus ||
+      (currentNotes || '') !== originalValues.notes
+    );
+  }, [originalValues, currentFormValues]);
 
   useEffect(() => {
     if (submissionResponse?.data) {
@@ -162,7 +199,7 @@ const ProcessSubmissionPage = () => {
         notes: submissionResponse.data.notes || '',
       });
     }
-  }, [submissionResponse?.data, form, config]);
+  }, [submissionResponse, form, config]);
 
   const onSubmit = (data: ProcessSubmissionFormData) => {
     process(data);
@@ -194,22 +231,64 @@ const ProcessSubmissionPage = () => {
         </h1>
       </div>
 
-      <div className='w-full flex items-center gap-4 h-[80vh]'>
-        <div className='flex-2 items-center justify-center h-full'>
-          {isError && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-              <div className="rounded-full bg-red-100 p-3">
-                <X className="h-6 w-6 text-red-600" />
-              </div>
-              <p className="text-sm text-red-600">
-                {error?.message || 'Gagal memuat dokumen'}
-              </p>
+      <div className='w-full flex items-start gap-4 h-[80vh]'>
+        <div className='flex-2 flex flex-col items-start justify-start h-full gap-2 relative'>
+          <Tabs value={selectedTab} onValueChange={(val) => setSelectedTab(val as 'preview' | 'scanned')} className="w-full h-full flex flex-col gap-2">
+            <div className="w-full flex justify-start">
+              <TabsList className="bg-white border border-gray-200">
+                <TabsTrigger value="preview" className="cursor-pointer">Preview Dokumen</TabsTrigger>
+                <TabsTrigger value="scanned" className="cursor-pointer">Hasil Scan Dokumen</TabsTrigger>
+              </TabsList>
             </div>
-          )}
 
-          {pdfBlobUrl && !isLoading && !isError && (
-            <iframe src={pdfBlobUrl} title="PDF Preview" className="w-full h-full rounded bg-white" />
-          )}
+            <div className="w-full flex-1 relative rounded border border-gray-200">
+              <TabsContent value="preview" forceMount hidden={selectedTab !== 'preview'} className="w-full h-full m-0 data-[state=inactive]:hidden flex flex-col items-center justify-center bg-white rounded p-4 text-center">
+                <div className="w-full h-full bg-white rounded">
+                  {isError && (
+                    <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                      <div className="rounded-full bg-red-100 p-3">
+                        <X className="h-6 w-6 text-red-600" />
+                      </div>
+                      <p className="text-sm text-red-600">
+                        {error?.message || 'Gagal memuat dokumen'}
+                      </p>
+                    </div>
+                  )}
+
+                  {isLoadingGenerateFile && (
+                    <div className="flex items-center h-full justify-center">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Memuat dokumen...
+                    </div>
+                  )}
+
+                  {pdfBlobUrl && !isLoadingGenerateFile && !isError && (
+                    <iframe src={pdfBlobUrl} title="PDF Preview" className="w-full h-full rounded" />
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="scanned" forceMount hidden={selectedTab !== 'scanned'} className="w-full h-full m-0 data-[state=inactive]:hidden flex flex-col items-center justify-center bg-white rounded p-4 text-center">
+                {!isBothVerified ? (
+                  <div className=" text-gray-500 flex flex-col space-y-5 items-center justify-center">
+                    <CircleX className='h-5 w-5' />
+                    <p className='text-sm'>Dokumen ini hanya dapat dilihat jika sudah diverifikasi oleh Dosen dan Staff.</p>
+                  </div>
+                ) : moaIa?.scannedDocumentKey ? (
+                  scannedDocumentPreviewUrl ? (
+                    <iframe src={scannedDocumentPreviewUrl} title="Scanned Document Preview" className="w-full h-full rounded" />
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Memuat hasil scan...
+                    </div>
+                  )
+                ) : (
+                  <p className="text-sm text-gray-500 font-medium">Mahasiswa belum mengirimkan hasil scan dokumen</p>
+                )}
+              </TabsContent>
+            </div>
+          </Tabs>
         </div>
         <div className='flex-1 h-full flex items-start justify-center p-4 bg-white rounded-md border-gray-200'>
           <Accordion
@@ -250,104 +329,118 @@ const ProcessSubmissionPage = () => {
                 </div>
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="action">
-              <AccordionTrigger className='font-semibold'>Tindakan</AccordionTrigger>
-              <AccordionContent className='w-full flex items-start flex-col space-y-2'>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className='w-full flex flex-col space-y-3.5'>
-                    <FormField
-                      control={form.control}
-                      name='submissionStatus'
-                      render={({ field }) => (
-                        <FormItem className='text-start flex flex-col space-y-2'>
-                          <FormLabel required>Status Verifikasi</FormLabel>
-                          <FormControl>
-                            <Select
-                              name={field.name}
-                              onValueChange={field.onChange}
-                              value={field.value}
-                            >
-                              <SelectTrigger className="w-full" ref={field.ref}>
-                                <SelectValue placeholder="Verifikasi" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectGroup>
-                                  <SelectLabel>Status Verifikasi</SelectLabel>
-                                  {allVisibleStatuses.map((status) => {
-                                    const isSelectable = config.selectableStatuses.includes(status);
-                                    return (
-                                      <SelectItem
-                                        key={status}
-                                        value={status}
-                                        disabled={!isSelectable}
-                                        className={isSelectable ? '' : 'italic opacity-50'}
-                                      >
-                                        {submissionStatusLabels[status]}
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {(form.watch('submissionStatus') === 'rejected_adhoc' || form.watch('submissionStatus') === 'rejected_staff')  && (
+            {submissionResponse?.data?.status === 'completed' ? (
+              <div className="w-full p-4 bg-teal-50 border text-start border-teal-200  rounded-lg flex items-start gap-3">
+                <CheckCheck className="h-5 w-5 text-teal-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-teal-800">
+                    Dokumen terselesaikan
+                  </p>
+                  <p className="text-xs text-teal-700 mt-1">
+                    Status dokumen pengajuan telah <b>Selesai</b> (terverifikasi baik oleh Dosen dan Staf).
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <AccordionItem value="action">
+                <AccordionTrigger className='font-semibold'>Tindakan</AccordionTrigger>
+                <AccordionContent className='w-full flex items-start flex-col space-y-2'>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className='w-full flex flex-col space-y-3.5'>
                       <FormField
                         control={form.control}
-                        name='notes'
+                        name='submissionStatus'
                         render={({ field }) => (
                           <FormItem className='text-start flex flex-col space-y-2'>
-                            <FormLabel>Catatan</FormLabel>
+                            <FormLabel required>Status Verifikasi</FormLabel>
                             <FormControl>
-                              <textarea
-                                {...field}
-                                rows={4}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                placeholder="Tambahkan catatan tambahan jika diperlukan..."
-                              />
+                              <Select
+                                name={field.name}
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <SelectTrigger className="w-full" ref={field.ref}>
+                                  <SelectValue placeholder="Verifikasi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    <SelectLabel>Status Verifikasi</SelectLabel>
+                                    {allVisibleStatuses.map((status) => {
+                                      const isSelectable = config.selectableStatuses.includes(status);
+                                      return (
+                                        <SelectItem
+                                          key={status}
+                                          value={status}
+                                          disabled={!isSelectable}
+                                          className={isSelectable ? '' : 'italic opacity-50'}
+                                        >
+                                          {submissionStatusLabels[status]}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    )}
 
-                    <div className="flex items-center justify-end gap-4 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size='lg'
-                        onClick={handleReset}
-                        disabled={isPending}
-                        className='cursor-pointer border-gray-400'
-                      >
-                        Reset
-                      </Button>
+                      {(currentFormValues?.[0] === 'rejected_adhoc' || currentFormValues?.[0] === 'rejected_staff') && (
+                        <FormField
+                          control={form.control}
+                          name='notes'
+                          render={({ field }) => (
+                            <FormItem className='text-start flex flex-col space-y-2'>
+                              <FormLabel>Catatan</FormLabel>
+                              <FormControl>
+                                <textarea
+                                  {...field}
+                                  rows={4}
+                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                  placeholder="Tambahkan catatan tambahan jika diperlukan..."
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
-                      <Button
-                        type="submit"
-                        size='lg'
-                        disabled={isPending || !hasChanges}
-                        className="bg-teal-950 hover:bg-teal-800 text-white font-medium cursor-pointer"
-                      >
-                        {isPending ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Memverifikasi...
-                          </>
-                        ) : (
-                          'Update Verifikasi'
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </AccordionContent>
-            </AccordionItem>
+                      <div className="flex items-center justify-end gap-4 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size='lg'
+                          onClick={handleReset}
+                          disabled={isPending}
+                          className='cursor-pointer border-gray-400'
+                        >
+                          Reset
+                        </Button>
+
+                        <Button
+                          type="submit"
+                          size='lg'
+                          disabled={isPending || !hasChanges}
+                          className="bg-teal-950 hover:bg-teal-800 text-white font-medium cursor-pointer"
+                        >
+                          {isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Memverifikasi...
+                            </>
+                          ) : (
+                            'Update Verifikasi'
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
         </div>
       </div>
