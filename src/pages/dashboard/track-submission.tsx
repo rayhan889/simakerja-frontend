@@ -14,195 +14,195 @@ import { PDFViewerDialog } from "@/components/submission/pdf-viewer-dialog";
 import type { SubmissionsByUserIdAndMoAIAType } from "@/types/submission.type";
 
 export const DashboardTrackSubmissionPage = () => {
-  
+
   const { user } = useAuth();
-    const userId = user?.id || "";
-    const isStudent = user?.role === 'student';
-    const navigate = useNavigate();
-  
-    const [pagination, setPagination] = useState<PaginationState>({
-      pageIndex: 0,
-      pageSize: 10,
-    })
-  
-    const [sorting, setSorting] = useState<SortingState>([])
-  
-    const [search, setSearch] = useState<string>("")
+  const userId = user?.id || "";
+  const isStudent = user?.role === 'student';
+  const navigate = useNavigate();
 
-    const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
-    const [selectedSubmission, setSelectedSubmission] = useState<{
-        id: string;
-        partnerName: string;
-    } | null>(null);
-  
-    const queryParams = useMemo<QueryParams>(() => ({
-      page: pagination.pageIndex,
-      size: pagination.pageSize,
-      sort: toSpringSort(sorting),
-      search: search.trim() || undefined,
-    }), [pagination.pageIndex, pagination.pageSize, sorting, search])
-  
-    const {
-      data,
-      isLoading,
-      isFetching,
-      isError,
-      error
-    } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId, isStudent ? user?.nim : undefined);
-  
-    const tableData = data?.content ?? [];
-    const totalItems = data?.totalElements ?? 0;
-    const totalPages = data?.totalPages ?? 0;
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
-    const handleViewPdf = useCallback((submissionId: string, partnerName: string) => {
-        setSelectedSubmission({ id: submissionId, partnerName });
-        setPdfDialogOpen(true);
-    }, []);
+  const [sorting, setSorting] = useState<SortingState>([])
 
-    const handleEdit = useCallback((submission: SubmissionsByUserIdAndMoAIAType) => {
-        navigate(`/dashboard/submission/${submission.submissionId}/edit`);
-    }, [navigate]);
+  const [search, setSearch] = useState<string>("")
 
-    const canEditSubmission = useCallback(
-      (submission: SubmissionsByUserIdAndMoAIAType) => {
-        if (!isStudent) return false;
-        if (submission.applicantId !== userId) return false;
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<{
+    id: string;
+    partnerName: string;
+  } | null>(null);
 
-        return (
-          submission.status === "pending" || submission.status === "in_process" || submission.status === 'rejected_adhoc'
-        );
-      },
-      [isStudent, userId]
-    );
+  const queryParams = useMemo<QueryParams>(() => ({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+    sort: toSpringSort(sorting),
+    search: search.trim() || undefined,
+  }), [pagination.pageIndex, pagination.pageSize, sorting, search])
 
-    const columns = useMemo(
-        () => getSubmissionByUserIdAndMoATypeColumns({
-            onViewPdf: handleViewPdf,
-            onEdit: handleEdit,
-            canEdit: canEditSubmission,
-        }),
-        [handleViewPdf, handleEdit, canEditSubmission]
-    );
-  
-      const handleSearchChange = useCallback((value: string) => {
-        setSearch(value);
-        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-      }, []);
-  
-      if (isError) {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error
+  } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId, isStudent ? user?.nim : undefined);
+
+  const tableData = data?.content ?? [];
+  const totalItems = data?.totalElements ?? 0;
+  const totalPages = data?.totalPages ?? 0;
+
+  const handleViewPdf = useCallback((submissionId: string, partnerName: string) => {
+    setSelectedSubmission({ id: submissionId, partnerName });
+    setPdfDialogOpen(true);
+  }, []);
+
+  const handleEdit = useCallback((submission: SubmissionsByUserIdAndMoAIAType) => {
+    navigate(`/dashboard/submission/${submission.submissionId}/edit`);
+  }, [navigate]);
+
+  const canEditSubmission = useCallback(
+    (submission: SubmissionsByUserIdAndMoAIAType) => {
+      if (!isStudent) return false;
+      if (submission.applicantId !== userId) return false;
+
       return (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-8">
-          <div className="flex flex-col items-center text-center">
-            <svg
-              className="h-12 w-12 text-red-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-red-800">
-              Gagal Memuat Data
-            </h3>
-            <p className="mt-2 text-sm text-red-600">
-              {error?.message || 'Terjadi kesalahan saat memuat data pengajuan.'}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
-            >
-              Coba Lagi
-            </button>
-          </div>
-        </div>
+        submission.status === "pending" || submission.status === "in_process" || submission.status === 'rejected_adhoc' || submission.status === 'verified_staff'
       );
-    }
-  
+    },
+    [isStudent, userId]
+  );
+
+  const columns = useMemo(
+    () => getSubmissionByUserIdAndMoATypeColumns({
+      onViewPdf: handleViewPdf,
+      onEdit: handleEdit,
+      canEdit: canEditSubmission,
+    }),
+    [handleViewPdf, handleEdit, canEditSubmission]
+  );
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
+
+  if (isError) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">
-                Lacak Pengajuan MoA IA
-            </h1>
-          </div>
-          
-        </div>
-  
-        <div className="flex  w-full items-center justify-between gap-4">
-          <DataTableSearch
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="Cari nama mitra..."
-            className="w-80"
-            debounceMs={300}
-          />
-  
-          <div className="flex items-center gap-3">
-            {isFetching && !isLoading && (
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <svg
-                  className="h-4 w-4 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                Memperbarui...
-              </div>
-            )}
-          </div>
-
-          <Link
-            to='/dashboard/submit-submission'
-            className={
-              cn(buttonVariants({ size: 'lg' }), 'cursor-pointer bg-teal-950 text-white flex items-center hover:bg-teal-800 ')}
+      <div className="rounded-lg border border-red-200 bg-red-50 p-8">
+        <div className="flex flex-col items-center text-center">
+          <svg
+            className="h-12 w-12 text-red-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <Send className="mr-2 h-4 w-4" /> 
-            <span className="font-medium">Ajukan Dokumen</span>
-          </Link>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-red-800">
+            Gagal Memuat Data
+          </h3>
+          <p className="mt-2 text-sm text-red-600">
+            {error?.message || 'Terjadi kesalahan saat memuat data pengajuan.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+          >
+            Coba Lagi
+          </button>
         </div>
-  
-        <DataTable
-          columns={columns}
-          
-          data={tableData}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          
-          pagination={pagination}
-          onPaginationChange={setPagination}
-          
-          sorting={sorting}
-          onSortingChange={setSorting}
-          
-          isLoading={isLoading}
-          
-          pageSizeOptions={[10, 20, 50]}
-        />
-
-        <PDFViewerDialog
-            submissionId={selectedSubmission?.id ?? null}
-            open={pdfDialogOpen}
-            onOpenChange={setPdfDialogOpen}
-        />
       </div>
     );
+  }
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-gray-900">
+            Lacak Pengajuan MoA IA
+          </h1>
+        </div>
+
+      </div>
+
+      <div className="flex  w-full items-center justify-between gap-4">
+        <DataTableSearch
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Cari nama mitra..."
+          className="w-80"
+          debounceMs={300}
+        />
+
+        <div className="flex items-center gap-3">
+          {isFetching && !isLoading && (
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <svg
+                className="h-4 w-4 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+              Memperbarui...
+            </div>
+          )}
+        </div>
+
+        <Link
+          to='/dashboard/submit-submission'
+          className={
+            cn(buttonVariants({ size: 'lg' }), 'cursor-pointer bg-teal-950 text-white flex items-center hover:bg-teal-800 ')}
+        >
+          <Send className="mr-2 h-4 w-4" />
+          <span className="font-medium">Ajukan Dokumen</span>
+        </Link>
+      </div>
+
+      <DataTable
+        columns={columns}
+
+        data={tableData}
+        totalItems={totalItems}
+        totalPages={totalPages}
+
+        pagination={pagination}
+        onPaginationChange={setPagination}
+
+        sorting={sorting}
+        onSortingChange={setSorting}
+
+        isLoading={isLoading}
+
+        pageSizeOptions={[10, 20, 50]}
+      />
+
+      <PDFViewerDialog
+        submissionId={selectedSubmission?.id ?? null}
+        open={pdfDialogOpen}
+        onOpenChange={setPdfDialogOpen}
+      />
+    </div>
+  );
 }
