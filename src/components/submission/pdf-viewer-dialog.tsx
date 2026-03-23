@@ -30,7 +30,7 @@ export const PDFViewerDialog = ({
             open={open}
             onOpenChange={onOpenChange}
         >
-            <DialogTitle>
+            <DialogTitle className='hidden'>
                 MoA IA PDF
             </DialogTitle>
             <DialogContent
