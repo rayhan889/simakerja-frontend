@@ -1,8 +1,8 @@
 import { useGenerateFile } from '@/hooks/use-generate-file';
-import { useEffect } from 'react'
 import {
     Dialog,
     DialogContent,
+    DialogTitle
 } from '@/components/ui/dialog';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -11,35 +11,34 @@ interface PDFViewerDialogProps {
     submissionId: string | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    allowDownload?: boolean;
 }
 
 export const PDFViewerDialog = ({
     submissionId,
     open,
-    onOpenChange
-}: PDFViewerDialogProps) => { 
+    onOpenChange,
+    allowDownload = true
+}: PDFViewerDialogProps) => {
 
     const { pdfBlobUrl, isLoading, isError, error } = useGenerateFile(
         open ? submissionId : null
     )
 
-    useEffect(() => {
-        if (!open && pdfBlobUrl) {
-            URL.revokeObjectURL(pdfBlobUrl);
-        }
-    }, [open, pdfBlobUrl]);
-
-  return (
-    <Dialog
-        open={open}
-        onOpenChange={onOpenChange}
-    >
-        <DialogContent 
+    return (
+        <Dialog
+            open={open}
+            onOpenChange={onOpenChange}
+        >
+            <DialogTitle>
+                MoA IA PDF
+            </DialogTitle>
+            <DialogContent
                 showCloseButton={false}
                 className="sm:max-w-7xl h-[94vh] flex flex-col p-0 gap-0"
             >
 
-                <div className="flex-1 overflow-auto bg-gray-100 flex items-start justify-center p-4">
+                <div className="flex-1 overflow-auto bg-gray-100 flex items-start justify-center p-1 rounded-sm">
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center h-full gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
@@ -59,10 +58,14 @@ export const PDFViewerDialog = ({
                     )}
 
                     {pdfBlobUrl && !isLoading && !isError && (
-                        <iframe src={pdfBlobUrl} title="PDF Preview" className="w-full h-full rounded bg-white" />
+                        <iframe
+                            src={allowDownload ? pdfBlobUrl : `${pdfBlobUrl}#toolbar=0`}
+                            title="PDF Preview"
+                            className="w-full h-full rounded bg-white"
+                        />
                     )}
                 </div>
             </DialogContent>
-    </Dialog>
-  )
+        </Dialog>
+    )
 }

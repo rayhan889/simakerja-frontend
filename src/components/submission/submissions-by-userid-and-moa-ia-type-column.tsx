@@ -9,7 +9,7 @@ import { displaySubmissionStatus, getStatusBadgeColor } from "@/lib/display-stat
 const submissionByUserIdAndMoATypeColumnHelper = createColumnHelper<SubmissionsByUserIdAndMoAIAType>();
 
 export interface SubmissionColumnOptions {
-    onViewPdf?: (submissionId: string, partnerName: string) => void;
+    onViewPdf?: (submissionId: string, partnerName: string, status: SubmissionStatus) => void;
     onViewDetail?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
     onEdit?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
     canEdit?: (submission: SubmissionsByUserIdAndMoAIAType) => void;
@@ -28,8 +28,8 @@ export function getSubmissionByUserIdAndMoATypeColumns(
 
                 return (
                     <div className="max-w-50">
-                        <p 
-                            className="font-medium text-gray-900 truncate" 
+                        <p
+                            className="font-medium text-gray-900 truncate"
                             title={applicantName}
                         >
                             {applicantName}
@@ -40,7 +40,7 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                     </div>
                 );
             },
-            enableSorting: false, 
+            enableSorting: false,
         }),
 
         submissionByUserIdAndMoATypeColumnHelper.accessor('partnerName', {
@@ -51,8 +51,8 @@ export function getSubmissionByUserIdAndMoATypeColumns(
 
                 return (
                     <div className="max-w-50">
-                        <p 
-                            className="font-medium text-gray-900 truncate" 
+                        <p
+                            className="font-medium text-gray-900 truncate"
                             title={partnerName}
                         >
                             {partnerName}
@@ -63,7 +63,7 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                     </div>
                 );
             },
-            enableSorting: false, 
+            enableSorting: false,
         }),
 
         submissionByUserIdAndMoATypeColumnHelper.accessor('activityType', {
@@ -74,11 +74,11 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                     <span className="text-gray-600">
                         {
                             activity == 'internship' ? 'Magang' :
-                            activity == 'study_independent' ? 'Studi Independen' :
-                            activity == 'kkn' ? 'KKN' :
-                            activity == 'research' ? 'Penelitian' :
-                            activity == 'community_service' ? 'Pengabdian Masyarakat' :
-                            activity
+                                activity == 'study_independent' ? 'Studi Independen' :
+                                    activity == 'kkn' ? 'KKN' :
+                                        activity == 'research' ? 'Penelitian' :
+                                            activity == 'community_service' ? 'Pengabdian Masyarakat' :
+                                                activity
                         }
                     </span>
                 );
@@ -94,9 +94,9 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                     <span className="text-gray-600">
                         {
                             documentType == 'moa' ? 'MoA' :
-                            documentType == 'ia' ? 'IA' :
-                            documentType == 'moa_ia' ? 'MoA & IA Terintegrasi' :
-                            documentType
+                                documentType == 'ia' ? 'IA' :
+                                    documentType == 'moa_ia' ? 'MoA & IA Terintegrasi' :
+                                        documentType
                         }
                     </span>
                 );
@@ -109,7 +109,7 @@ export function getSubmissionByUserIdAndMoATypeColumns(
             cell: (info) => {
                 const status = info.getValue() as SubmissionStatus;
                 return (
-                    <Badge 
+                    <Badge
                         variant={'secondary'}
                         className={getStatusBadgeColor(status)}
                     >
@@ -151,20 +151,20 @@ export function getSubmissionByUserIdAndMoATypeColumns(
         }),
 
         submissionByUserIdAndMoATypeColumnHelper.display({
-            id: 'actions', 
-            header: '',    
+            id: 'actions',
+            header: '',
             cell: (info) => {
                 const submission = info.row.original;
-                const { submissionId, partnerName } = info.row.original;
+                const { submissionId, partnerName, status } = info.row.original;
 
                 const canEdit = options.canEdit
-                ? options.canEdit(submission)
-                : !!options.isEditable;
+                    ? options.canEdit(submission)
+                    : !!options.isEditable;
 
                 return (
                     <div className="flex items-center gap-1">
                         <button
-                            onClick={() => options.onViewPdf!(submissionId, partnerName)}
+                            onClick={() => options.onViewPdf!(submissionId, partnerName, status)}
                             className="rounded-full p-2 cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
                             title="Lihat Dokumen"
                         >
@@ -174,15 +174,14 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                         <button
                             onClick={() => canEdit && options.onEdit?.(submission)}
                             disabled={!canEdit}
-                            className={`rounded-full p-2 transition-colors ${
-                                canEdit
+                            className={`rounded-full p-2 transition-colors ${canEdit
                                 ? "cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                                 : "cursor-not-allowed text-gray-300 opacity-50"
-                            }`}
+                                }`}
                             title={
                                 canEdit
-                                ? "Edit Dokumen"
-                                : "Tidak dapat diedit (status bukan pending/dalam proses atau bukan pemilik)"
+                                    ? "Edit Dokumen"
+                                    : "Tidak dapat diedit (status bukan pending/dalam proses atau bukan pemilik)"
                             }
                         >
                             <Pencil className="h-4 w-4" />
@@ -190,7 +189,7 @@ export function getSubmissionByUserIdAndMoATypeColumns(
                     </div>
                 );
             },
-            enableSorting: false,  
+            enableSorting: false,
         }),
     ];
 }
