@@ -9,11 +9,12 @@ export const generateFileService = {
         try {
             const response = await apiClient.get(`generate-file/moa-ia/${submissionId}`, {
                 responseType: 'blob',
+                timeout: 30000
             });
-            return response.data;     
+            return response.data;
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 401) {
-            return null;
+                return null;
             }
             throw error
         }

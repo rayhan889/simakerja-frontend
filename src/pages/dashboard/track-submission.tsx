@@ -11,7 +11,7 @@ import { Link, useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 import { Send } from 'lucide-react'
 import { PDFViewerDialog } from "@/components/submission/pdf-viewer-dialog";
-import type { SubmissionsByUserIdAndMoAIAType } from "@/types/submission.type";
+import type { SubmissionsByUserIdAndMoAIAType, SubmissionStatus } from "@/types/submission.type";
 
 export const DashboardTrackSubmissionPage = () => {
 
@@ -33,6 +33,7 @@ export const DashboardTrackSubmissionPage = () => {
   const [selectedSubmission, setSelectedSubmission] = useState<{
     id: string;
     partnerName: string;
+    status: SubmissionStatus
   } | null>(null);
 
   const queryParams = useMemo<QueryParams>(() => ({
@@ -54,8 +55,8 @@ export const DashboardTrackSubmissionPage = () => {
   const totalItems = data?.totalElements ?? 0;
   const totalPages = data?.totalPages ?? 0;
 
-  const handleViewPdf = useCallback((submissionId: string, partnerName: string) => {
-    setSelectedSubmission({ id: submissionId, partnerName });
+  const handleViewPdf = useCallback((submissionId: string, partnerName: string, status: SubmissionStatus) => {
+    setSelectedSubmission({ id: submissionId, partnerName, status });
     setPdfDialogOpen(true);
   }, []);
 
@@ -202,6 +203,7 @@ export const DashboardTrackSubmissionPage = () => {
         submissionId={selectedSubmission?.id ?? null}
         open={pdfDialogOpen}
         onOpenChange={setPdfDialogOpen}
+        allowDownload={selectedSubmission?.status === 'completed'}
       />
     </div>
   );
