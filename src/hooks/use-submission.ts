@@ -17,7 +17,7 @@ export const submissionKeys = {
     moaIa: () => [...submissionKeys.all, 'moa-ia'] as const,
     moaIaList: (params: QueryParams) => [...submissionKeys.moaIa(), 'list', params] as const,
     moaIaByUser: (userId: string) => [...submissionKeys.moaIa(), 'user', userId] as const,
-    moaIaByUserList: (params: QueryParams, userId: string) => 
+    moaIaByUserList: (params: QueryParams, userId: string) =>
         [...submissionKeys.moaIaByUser(userId), 'list', params] as const,
     partnerList: (search?: SearchParams) => [...submissionKeys.all, 'partners', search] as const,
     details: (submissionId: string) => [...submissionKeys.all, 'details', submissionId] as const,
@@ -44,7 +44,7 @@ export function useSubmissions(params: QueryParams) {
 }
 
 export function useMoaIASubmissions(params: QueryParams) {
-     return useQuery({
+    return useQuery({
         queryKey: submissionKeys.moaIaList(params),
 
         queryFn: () => submissionService.getPaginatedMoASubmissionsByUserId(params),
@@ -106,14 +106,14 @@ export function useCreateSubmission() {
 
         onError: (error) => {
             let message = error.message;
-  
+
             if (error instanceof AxiosError && error.response?.data) {
                 console.log("error response status: " + error.response.status)
                 if (error.response.status === 409) {
-                    message = "Nama mitra sudah pernah digunakan untuk jenis MoAIA yang sama. Silakan gunakan nama mitra yang berbeda.";
+                    message = error.response.data.message;
                 }
             }
-            
+
             toast.error("Gagal membuat pengajuan: " + message);
             console.log("failed to create submission: " + message);
         }
@@ -141,7 +141,7 @@ export function useUpdateSubmission(submissionId: string) {
     const navigate = useNavigate();
 
     return useMutation({
-        mutationFn: async (data: UpdateMoaIaSubmissionRequest) =>{
+        mutationFn: async (data: UpdateMoaIaSubmissionRequest) => {
             const response = await submissionService.updateSubmission(submissionId, data);
 
             if (response === null) {
@@ -169,14 +169,14 @@ export function useUpdateSubmission(submissionId: string) {
 
         onError: (error) => {
             let message = error.message;
-  
+
             if (error instanceof AxiosError && error.response?.data) {
                 console.log("error response status: " + error.response.status)
                 if (error.response.status === 409) {
                     message = "Nama mitra sudah pernah digunakan untuk jenis MoAIA yang sama. Silakan gunakan nama mitra yang berbeda.";
                 }
             }
-            
+
             toast.error("Gagal memperbarui pengajuan: " + message);
             console.log("failed to update submission: " + message);
         }
@@ -218,7 +218,7 @@ export function useMoaIASubmissionsDetailForStaff(params: QueryParams, partnerNa
 
     return useQuery({
         queryKey: submissionKeys.moaIaForStaffDetailList(params, partnerName, period, activityType),
-        
+
         queryFn: () => submissionService.getStaffSubmissionsPaginationDetail(params, partnerName, period, activityType),
 
         placeholderData: keepPreviousData,
@@ -254,7 +254,7 @@ export function useMoaIASubmissionsDetailForLecturer(params: QueryParams, partne
 
     return useQuery({
         queryKey: submissionKeys.moaIaForLecturerDetailList(params, partnerName, period, activityType),
-        
+
         queryFn: () => submissionService.getLecturerSubmissionsPaginationDetail(params, partnerName, period, activityType),
 
         placeholderData: keepPreviousData,

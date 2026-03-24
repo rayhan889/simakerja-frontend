@@ -8,6 +8,8 @@ export type MoAIASubmissionType = 'moa' | 'ia' | 'moa_ia';
 
 export type ActivityType = 'internship' | 'study_independent' | 'kkn';
 
+export type MoaIASubmissionMode = 'new_partner' | 'existing_partner';
+
 export const activityLabels: Record<ActivityType, string> = {
     internship: 'Magang',
     study_independent: 'Studi Independen',
@@ -73,6 +75,7 @@ export interface SubmissionsByUserIdAndMoAIAType {
     submissionDate: string;
     notes?: string;
     documentType: MoAIASubmissionType;
+    period: string;
 }
 
 export interface StudentSnapshotRequest {
@@ -95,6 +98,7 @@ export interface MoaIaDetails {
     partnerCooperationPeriod: number;
     scannedDocumentKey?: string;
     averageConfidence?: number;
+    mode: MoaIASubmissionMode;
 }
 
 export interface CreateMoAIASubmissionRequest {
