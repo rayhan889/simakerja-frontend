@@ -433,6 +433,41 @@ const DashboardUpdateSubmissionPage = () => {
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col space-y-3.5">
+
+                    {!isFinalizationDocument && (
+                        <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 ">
+                            <div className='flex items-center gap-x-3'>
+                                <BookText className='h-5 w-5' />
+                                <div className='flex items-start flex-col space-y-0.5'>
+                                    <h2 className="text-base font-bold text-gray-900">
+                                        Informasi Umum
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="notes"
+                                disabled
+                                render={({ field }) => (
+                                    <FormItem className='text-start flex flex-col space-y-2 w-full'>
+                                        <FormLabel>Catatan Staf/Dosen</FormLabel>
+                                        <FormControl>
+                                            <textarea
+                                                {...field}
+                                                rows={4}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                                placeholder="Belum ada catatan"
+                                                value={field.value || 'Belum ada catatan'}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    )}
+
                     {!isFinalizationDocument && (
                         <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 ">
                             <div className='flex items-center gap-x-3'>
@@ -1033,38 +1068,6 @@ const DashboardUpdateSubmissionPage = () => {
                                     </p>
                                 )}
                             </div>
-                        </div>
-                    )}
-
-                    {!isFinalizationDocument && (
-                        <div className="bg-white rounded-lg border border-gray-200 w-full flex flex-col items-start p-5 gap-y-6 ">
-                            <div className='flex items-center gap-x-3'>
-                                <BookText className='h-5 w-5' />
-                                <div className='flex items-start flex-col space-y-0.5'>
-                                    <h2 className="text-base font-bold text-gray-900">
-                                        Informasi Umum
-                                    </h2>
-                                </div>
-                            </div>
-
-                            <FormField
-                                control={form.control}
-                                name="notes"
-                                render={({ field }) => (
-                                    <FormItem className='text-start flex flex-col space-y-2 w-full'>
-                                        <FormLabel>Catatan (Opsional)</FormLabel>
-                                        <FormControl>
-                                            <textarea
-                                                {...field}
-                                                rows={4}
-                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                                placeholder="Tambahkan catatan tambahan jika diperlukan..."
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
                         </div>
                     )}
 

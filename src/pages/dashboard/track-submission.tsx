@@ -203,7 +203,7 @@ export const DashboardTrackSubmissionPage = () => {
         submissionId={selectedSubmission?.id ?? null}
         open={pdfDialogOpen}
         onOpenChange={setPdfDialogOpen}
-        allowDownload={selectedSubmission?.status === 'completed'}
+        allowDownload={selectedSubmission?.status === 'verified_staff' || selectedSubmission?.status === 'completed'}
       />
     </div>
   );
