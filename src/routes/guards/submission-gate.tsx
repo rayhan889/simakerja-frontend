@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubmissionsByUserIdAndMoAIAType } from "@/hooks/use-submission";
-import { canCreateMoaIaSubmission } from "@/policies/submissionPolicies";
 import { Loader2 } from "lucide-react";
+import type { SubmissionsByUserIdAndMoAIAType } from "@/types/submission.type";
 
 interface SubmissionGateProps {
+    check?: (submissions: SubmissionsByUserIdAndMoAIAType[]) => { allowed: boolean; reason?: string };
     children: ReactNode;
     fallback?: (reason: string) => ReactNode;
 }
 
 export const SubmissionGate = ({
+    check,
     children,
     fallback
 }: SubmissionGateProps) => {
@@ -43,7 +45,7 @@ export const SubmissionGate = ({
     }
 
     const submissions = data?.content ?? [];
-    const result = canCreateMoaIaSubmission(submissions);
+    const result = check ? check(submissions as SubmissionsByUserIdAndMoAIAType[]) : { allowed: true };
 
     if (!result.allowed) {
         if (fallback && result.reason) {

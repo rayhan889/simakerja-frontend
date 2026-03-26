@@ -60,6 +60,7 @@ import {
     buildExcludedNimsPerGroup,
 } from '@/lib/submission-form-utils';
 import { SubmissionGate } from '@/routes/guards/submission-gate';
+import { canCreateMoaIaSubmission } from '@/policies/submissionPolicies';
 
 const FACULTY_OF_TECHNOLOGY = 'Teknik';
 const FACULTY_OF_TECHNOLOGY_ADDRESS = 'Gedung E1, Jl. Ketintang, unesa, Kec. Gayungan, Surabaya, Jawa Timur 60231';
@@ -322,10 +323,41 @@ export const DashboardSubmitSubmissionPage = () => {
         })
     }, [uploadPartnerLogo, form]);
 
+    const getImageDimension = (file: File): Promise<{ width: number, height: number }> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+
+            img.src = URL.createObjectURL(file);
+
+            img.onload = () => {
+                resolve({ width: img.width, height: img.height });
+                URL.revokeObjectURL(img.src);
+            };
+
+            img.onerror = (error) => {
+                reject(error);
+                URL.revokeObjectURL(img.src);
+            };
+        });
+    }
+
     const onDropPartnerLogo = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length > 0) {
             const file = acceptedFiles[0];
-            onUploadPartnerLogo(file);
+            getImageDimension(file)
+                .then(({ width, height }) => {
+                    if (width != height) {
+                        toast.error("Dimensi gambar tidak valid. Pastikan gambar berbentuk persegi (lebar dan panjang sama).");
+                    } else if (width < 85 || height < 85) {
+                        toast.error("Dimensi gambar terlalu kecil. Pastikan gambar memiliki lebar dan tinggi minimal 85 piksel.");
+                    } else {
+                        onUploadPartnerLogo(file);
+                    }
+                })
+                .catch((error) => {
+                    toast.error("Gagal membaca dimensi gambar. Pastikan file yang diunggah adalah gambar yang valid.");
+                    console.log("error getting image dimension: " + error.message);
+                });
         }
     }, [onUploadPartnerLogo]);
 
@@ -334,7 +366,7 @@ export const DashboardSubmitSubmissionPage = () => {
             onDrop: onDropPartnerLogo,
             accept: { 'image/*': ['.jpg', '.png', '.jpeg'] },
             maxFiles: 1,
-            maxSize: 10 * 1024 * 1024, // 10MB
+            maxSize: 1024 * 1024, // 1MB
         });
 
     const removePartnerLogo = () => {
@@ -370,6 +402,7 @@ export const DashboardSubmitSubmissionPage = () => {
             )}
         >
             <SubmissionGate
+                check={canCreateMoaIaSubmission}
                 fallback={(reason) => (
                     <FeatureBlockDialog reason={reason} redirectTo="/dashboard/track-submission" />
                 )}
