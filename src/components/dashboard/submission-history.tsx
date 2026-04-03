@@ -3,13 +3,14 @@ import { toSpringSort, type QueryParams } from '@/types/table.types'
 import type { PaginationState, SortingState } from '@tanstack/react-table'
 import { useCallback, useMemo, useState } from 'react'
 import { DataTable } from '../data-table/data-table'
-import { DataTableSearch } from '../data-table/data-table-search'
 import { useAuth } from '@/hooks/use-auth'
 import { getSubmissionByUserIdAndMoATypeColumns } from '../submission/submissions-by-userid-and-moa-ia-type-column';
 import { PDFViewerDialog } from '../submission/pdf-viewer-dialog'
 import type { SubmissionsByUserIdAndMoAIAType } from '@/types/submission.type'
+import { useNavigate } from 'react-router'
 
 export const DashboardSubmissionHistory = () => {
+  const navigate = useNavigate();
 
   const { user } = useAuth();
   const userId = user?.id || "";
@@ -22,19 +23,15 @@ export const DashboardSubmissionHistory = () => {
 
   const [sorting, setSorting] = useState<SortingState>([])
 
-  const [search, setSearch] = useState<string>("")
-
   const queryParams = useMemo<QueryParams>(() => ({
     page: pagination.pageIndex,
     size: pagination.pageSize,
     sort: toSpringSort(sorting),
-    search: search.trim() || undefined,
-  }), [pagination.pageIndex, pagination.pageSize, sorting, search])
+  }), [pagination.pageIndex, pagination.pageSize, sorting])
 
   const {
     data,
     isLoading,
-    isFetching,
     isError,
     error
   } = useSubmissionsByUserIdAndMoAIAType(queryParams, userId, isStudent ? user?.nim : undefined);
@@ -54,6 +51,10 @@ export const DashboardSubmissionHistory = () => {
       setPdfDialogOpen(true);
   }, []);
 
+  const handleEdit = useCallback((submission: SubmissionsByUserIdAndMoAIAType) => {
+    navigate(`/dashboard/submission/${submission.submissionId}/edit`);
+  }, [navigate]);
+
   const canEditSubmission = useCallback(
     (submission: SubmissionsByUserIdAndMoAIAType) => {
       if (!isStudent) return false;
@@ -70,14 +71,10 @@ export const DashboardSubmissionHistory = () => {
       () => getSubmissionByUserIdAndMoATypeColumns({
           onViewPdf: handleViewPdf,
           canEdit: canEditSubmission,
+          onEdit: handleEdit
       }),
-      [handleViewPdf, canEditSubmission]
+      [handleViewPdf, canEditSubmission, handleEdit]
   );
-
-    const handleSearchChange = useCallback((value: string) => {
-      setSearch(value);
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    }, []);
 
     if (isError) {
     return (
@@ -103,7 +100,7 @@ export const DashboardSubmissionHistory = () => {
             {error?.message || 'Terjadi kesalahan saat memuat data pengajuan.'}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.location.reload()}
             className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
           >
             Coba Lagi
@@ -125,41 +122,6 @@ export const DashboardSubmissionHistory = () => {
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <DataTableSearch
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Cari nama mitra..."
-          className="w-80"
-          debounceMs={300}
-        />
-
-        <div className="flex items-center gap-3 ">
-          {isFetching && !isLoading && (
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <svg
-                className="h-4 w-4 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              Memperbarui...
-            </div>
-          )}
-          
-        </div>
       </div>
 
       <DataTable
