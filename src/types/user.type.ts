@@ -37,6 +37,7 @@ export interface Staff {
 export interface UpdateStudentRequest {
     nim: string;
     studyProgram: string;
+    phoneNumber: string;
 }
 
 export interface StudentInfo {

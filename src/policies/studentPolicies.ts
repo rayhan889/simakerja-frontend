@@ -11,10 +11,10 @@ export function canCreateSubmission(user: AuthUser | null): {
         }
     }
     
-    if (!user.nim || !user.studyProgram) {
+    if (!user.nim || !user.studyProgram || !user.phoneNumber) {
         return {
             allowed: false,
-            reason: "NIM dan program studi harus terisi untuk membuat pengajuan"
+            reason: "NIM, program studi, dan nomor telepon harus terisi untuk membuat pengajuan"
         }
     }
 
