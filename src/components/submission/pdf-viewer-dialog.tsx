@@ -58,11 +58,38 @@ export const PDFViewerDialog = ({
                     )}
 
                     {pdfBlobUrl && !isLoading && !isError && (
-                        <iframe
-                            src={allowDownload ? pdfBlobUrl : `${pdfBlobUrl}#toolbar=0`}
-                            title="PDF Preview"
-                            className="w-full h-full rounded bg-white"
-                        />
+                        <div 
+                            className="relative w-full h-full"
+                            onContextMenu={(e) => {
+                                if (!allowDownload) e.preventDefault();
+                            }}
+                        >
+                            {!allowDownload && (
+                                <>
+                                    <div 
+                                        className="absolute top-0 left-0 w-full h-[56px] bg-gray-100 z-10 flex items-center justify-center border-b border-gray-200 px-2"
+                                        title="Fitur download dan print dinonaktifkan"
+                                    >
+                                        <span className="text-sm font-medium bg-white px-4 py-1.5 rounded-md shadow-sm">
+                                            Fitur unduh dan cetak dinonaktifkan. Pengajuan harus terverifikasi oleh staf untuk dapat didownload.
+                                        </span>
+                                    </div>
+                                    <style dangerouslySetInnerHTML={{
+                                        __html: `
+                                        @media print {
+                                            body { display: none !important; }
+                                            * { display: none !important; }
+                                        }
+                                        `
+                                    }} />
+                                </>
+                            )}
+                            <iframe
+                                src={allowDownload ? pdfBlobUrl : `${pdfBlobUrl}#toolbar=0&navpanes=0`}
+                                title="PDF Preview"
+                                className="w-full h-full rounded-md bg-white"
+                            />
+                        </div>
                     )}
                 </div>
             </DialogContent>
