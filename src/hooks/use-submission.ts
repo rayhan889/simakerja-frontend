@@ -160,8 +160,8 @@ export function useUpdateSubmission(submissionId: string) {
                 queryKey: submissionKeys.all
             });
 
-            queryClient.invalidateQueries({
-                queryKey: generateFileKeys.all
+            queryClient.removeQueries({
+                queryKey: generateFileKeys.bySubmissionId(submissionId),
             })
             navigate('/dashboard/track-submission')
             toast.success("Pengajuan berhasil diperbarui.")

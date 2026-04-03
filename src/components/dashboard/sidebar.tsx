@@ -17,6 +17,7 @@ import type { UserRole } from "@/types/user.type";
 import { useState } from "react";
 import { getInitials } from "@/lib/profile-fallack";
 import { displayRole } from "@/lib/display-role";
+import { LogoutConfirmDialog } from "@/components/dashboard/logout-confirm-dialog";
 
 interface DashboardSidebarProps {
   collapsed: boolean
@@ -76,6 +77,7 @@ export const DashboardSidebar = ({
   const location = useLocation();
   
   const [imageError, setImageError] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const navItems = getNavItemsByRole(user?.role || 'student');
 
@@ -174,12 +176,18 @@ export const DashboardSidebar = ({
             "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-teal-600 hover:text-white",
             collapsed ? "justify-center px-0" : "",
           )}
-          onClick={handleLogout}
+          onClick={() => setShowLogoutDialog(true)}
         >
           <LogOut className="h-5 w-5 shrink-0" />
           {!collapsed && <span>Keluar</span>}
         </button>
       </div>
+
+      <LogoutConfirmDialog
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={handleLogout}
+      />
 
       <button
         type="button"

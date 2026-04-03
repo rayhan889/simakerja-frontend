@@ -27,7 +27,7 @@ export function useUpdateStudent(userId: string) {
     return useMutation({
         mutationFn: (request: UpdateStudentRequest) => userService.updateStudent(userId, request),
 
-        onSuccess: (response) => {
+        onSuccess: (response, variables) => {
             queryClient.invalidateQueries({
                 queryKey: userKeys.studentDetails(userId),
             })
@@ -38,7 +38,7 @@ export function useUpdateStudent(userId: string) {
 
             if (response?.data) {
                 const { nim, studyProgram } = response.data;
-                useAuthStore.getState().updateFields({ nim, studyProgram })
+                useAuthStore.getState().updateFields({ nim, studyProgram, phoneNumber: variables.phoneNumber })
             }
         }
     })

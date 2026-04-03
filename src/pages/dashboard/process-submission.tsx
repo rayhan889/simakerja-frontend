@@ -44,10 +44,10 @@ import { displayDateId } from '@/lib/display-date-id';
 import { useAuth } from '@/hooks/use-auth';
 import {
   roleConfigMap,
-  allVisibleStatuses,
   type ProcessRole,
 } from '@/lib/process-submission-config';
 import { useGetPresignedUrlPartnerLogo } from '@/hooks/use-file-upload';
+import { Input } from '@/components/ui/input';
 
 const ProcessSubmissionPage = () => {
   const navigate = useNavigate();
@@ -133,12 +133,14 @@ const ProcessSubmissionPage = () => {
     },
   ];
 
-  const processSubmissionSchema = useMemo(() => {
+  const allowedStatuses = useMemo(() => {
     const currentStatus = submissionResponse?.data?.status;
-    const allowedStatuses = currentStatus && !config.selectableStatuses.includes(currentStatus)
+    return (currentStatus && !config.selectableStatuses.includes(currentStatus)
       ? [...config.selectableStatuses, currentStatus]
-      : config.selectableStatuses;
+      : config.selectableStatuses) as SubmissionStatus[];
+  }, [config.selectableStatuses, submissionResponse?.data?.status]);
 
+  const processSubmissionSchema = useMemo(() => {
     return z.object({
       submissionStatus: z.enum(
         allowedStatuses as [SubmissionStatus, ...SubmissionStatus[]],
@@ -152,7 +154,7 @@ const ProcessSubmissionPage = () => {
         path: ["notes"],
       }
     );
-  }, [config.selectableStatuses, submissionResponse?.data?.status]);
+  }, [allowedStatuses]);
 
   type ProcessSubmissionFormData = z.infer<typeof processSubmissionSchema>;
 
@@ -347,12 +349,23 @@ const ProcessSubmissionPage = () => {
                 <AccordionContent className='w-full flex items-start flex-col space-y-2'>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className='w-full flex flex-col space-y-3.5'>
+                      <div className='text-start flex flex-col space-y-2'>
+                        <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mt-1'>
+                          Status Verifikasi Saat Ini
+                        </label>
+                        <Input
+                            disabled
+                            className="w-full bg-gray-100 cursor-not-allowed"
+                            value={submissionStatusLabels[submissionResponse?.data?.status as SubmissionStatus] || 'N/A'}
+                        />
+                      </div>
+
                       <FormField
                         control={form.control}
                         name='submissionStatus'
                         render={({ field }) => (
                           <FormItem className='text-start flex flex-col space-y-2'>
-                            <FormLabel required>Status Verifikasi</FormLabel>
+                            <FormLabel required>Terverifikasi Ke</FormLabel>
                             <FormControl>
                               <Select
                                 name={field.name}
@@ -360,24 +373,19 @@ const ProcessSubmissionPage = () => {
                                 value={field.value}
                               >
                                 <SelectTrigger className="w-full" ref={field.ref}>
-                                  <SelectValue placeholder="Verifikasi" />
+                                  <SelectValue placeholder="Terverifikasi Ke" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectGroup>
-                                    <SelectLabel>Status Verifikasi</SelectLabel>
-                                    {allVisibleStatuses.map((status) => {
-                                      const isSelectable = config.selectableStatuses.includes(status);
-                                      return (
-                                        <SelectItem
+                                    <SelectLabel>Terverifikasi Ke</SelectLabel>
+                                    {allowedStatuses.map((status) => (
+                                      <SelectItem
                                           key={status}
                                           value={status}
-                                          disabled={!isSelectable}
-                                          className={isSelectable ? '' : 'italic opacity-50'}
                                         >
                                           {submissionStatusLabels[status]}
                                         </SelectItem>
-                                      );
-                                    })}
+                                    ))}
                                   </SelectGroup>
                                 </SelectContent>
                               </Select>

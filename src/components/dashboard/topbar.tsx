@@ -1,4 +1,3 @@
-import { Bell } from "lucide-react"
 import { Avatar } from "radix-ui";
 import {
   DropdownMenu,
@@ -11,17 +10,25 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { displayFullName } from "@/lib/display-fullname";
 import { getInitials } from "@/lib/profile-fallack";
 import { useState } from "react";
+import { LogoutConfirmDialog } from "@/components/dashboard/logout-confirm-dialog";
 
 export const DashboardTopbar = () => {
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
     const [imageError, setImageError] = useState(false);
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     
     const hasImage = Boolean(user?.profilePicture) && !imageError;
+
+    const handleLogout = async () => {
+      await logout();
+      navigate('/login', { replace: true });
+    }
 
   return (
      <header className=" sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 backdrop-blur-md lg:px-8">
@@ -33,7 +40,7 @@ export const DashboardTopbar = () => {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
+        {/* <button
           type="button"
           className="relative cursor-pointer flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           aria-label="Notifikasi"
@@ -42,7 +49,7 @@ export const DashboardTopbar = () => {
           <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
             2
           </span>
-        </button>
+        </button> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -78,10 +85,16 @@ export const DashboardTopbar = () => {
             </DropdownMenuGroup>
             <DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowLogoutDialog(true)}>Logout</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
       </DropdownMenu>
+
+      <LogoutConfirmDialog
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={handleLogout}
+      />
       </div>
     </header>
   )

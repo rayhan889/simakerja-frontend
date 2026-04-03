@@ -36,6 +36,10 @@ const updateStudentSchema = z.object({
         .min(11, "NIM minimal 11 karakter")
         .regex(/^\d+$/, "NIM hanya boleh berisi angka"),
     studyProgram: z.string().min(1, "Program studi harus diisi"),
+    phoneNumber: z.string()
+        .min(10, "Nomor telepon minimal 11 karakter")
+        .max(15, "Nomor telepon maksimal 15 karakter")
+        .regex(/^(?:\+62|62|0)8[1-9][0-9]{6,10}$/, "Nomor telepon hanya boleh berisi angka dan harus diawali dengan +62, 62, atau 0"),
 })
 
 type StudentUpdateFormValues = z.infer<typeof updateStudentSchema>
@@ -43,6 +47,7 @@ type StudentUpdateFormValues = z.infer<typeof updateStudentSchema>
 const studentUpdateDefaultValues: StudentUpdateFormValues = {
     studyProgram: "",
     nim: "",
+    phoneNumber: "",
 }
 
 const DashboardUpdateUserPage = () => {
@@ -92,6 +97,8 @@ const DashboardUpdateUserPage = () => {
             form.reset({
                 studyProgram: user?.studyProgram || "",
                 nim: user?.nim || "",
+                phoneNumber: user?.phoneNumber || "",
+
             });
         }
     }
@@ -147,97 +154,116 @@ const DashboardUpdateUserPage = () => {
                 </Button>
             </div>
 
-            <>
-                {isEditing ? (
-                    // Edit mode
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
-                            <div className="grid grid-cols-2 w-full gap-3">
-                                <FormField
-                                    control={form.control}
-                                    name="studyProgram"
-                                    render={({ field }) => (
-                                    <FormItem className='text-start flex flex-col space-y-2 col-span-1'>
-                                        <FormLabel required className="text-gray-600">Program Studi</FormLabel>
-                                        <Select 
-                                            key={field.value}
-                                            onValueChange={field.onChange} 
-                                            value={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className='w-full'>
-                                                    <SelectValue placeholder="Pilih Program Studi" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    <SelectLabel>Program Studi</SelectLabel>
-                                                    {studyProgramOptions.map((option) => (
-                                                        <SelectItem key={option.value} value={option.value}>
-                                                        {option.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="nim"
-                                    render={({ field }) => (
-                                    <FormItem className='text-start flex flex-col space-y-2 col-span-1'>
-                                        <FormLabel required className="text-gray-600">NIM</FormLabel>
+            {isEditing ? (
+                // Edit mode
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+                        <div className="grid grid-cols-2 w-full gap-3">
+                            <FormField
+                                control={form.control}
+                                name="studyProgram"
+                                render={({ field }) => (
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-1'>
+                                    <FormLabel required className="text-gray-600">Program Studi</FormLabel>
+                                    <Select 
+                                        key={field.value}
+                                        onValueChange={field.onChange} 
+                                        value={field.value}
+                                    >
                                         <FormControl>
-                                        <Input
-                                            {...field}
-                                            placeholder="2309120390123"
-                                        />
+                                            <SelectTrigger className='w-full'>
+                                                <SelectValue placeholder="Pilih Program Studi" />
+                                            </SelectTrigger>
                                         </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                            </div>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectLabel>Program Studi</SelectLabel>
+                                                {studyProgramOptions.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
 
-                            <div className="w-full flex justify-end">
-                                <Button 
-                                    type="submit"
-                                    onClick={form.handleSubmit(onSubmit)}
-                                    disabled={isPendingUpdateStudent}
-                                    className="bg-teal-950 hover:bg-teal-800 text-white font-medium cursor-pointer"
-                                >
-                                    {isPendingUpdateStudent ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Mengupdate...
-                                        </>
-                                    ) : (
-                                        'Simpan'
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </Form>
-                ) : (
-                    // View Mode
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
-                        <div className='text-start flex flex-col space-y-2'>
-                            <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600">Program Studi</p>
-                            <span>
-                                {studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"}
-                            </span>
+                            <FormField
+                                control={form.control}
+                                name="nim"
+                                render={({ field }) => (
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-1'>
+                                    <FormLabel required className="text-gray-600">NIM</FormLabel>
+                                    <FormControl>
+                                    <Input
+                                        {...field}
+                                        placeholder="2309120390123"
+                                    />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+
+                             <FormField
+                                control={form.control}
+                                name="phoneNumber"
+                                render={({ field }) => (
+                                <FormItem className='text-start flex flex-col space-y-2 col-span-1'>
+                                    <FormLabel required className="text-gray-600">Nomor Telepon</FormLabel>
+                                    <FormControl>
+                                    <Input
+                                        {...field}
+                                        placeholder="08123456789"
+                                    />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
                         </div>
-                        <div className='text-start flex flex-col space-y-2'>
-                            <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600">NIM</p>
-                            <span>{user?.nim}</span>
+
+                        <div className="w-full flex justify-end">
+                            <Button 
+                                type="submit"
+                                onClick={form.handleSubmit(onSubmit)}
+                                disabled={isPendingUpdateStudent}
+                                className="bg-teal-950 hover:bg-teal-800 text-white font-medium cursor-pointer"
+                            >
+                                {isPendingUpdateStudent ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Mengupdate...
+                                    </>
+                                ) : (
+                                    'Simpan'
+                                )}
+                            </Button>
                         </div>
-                        </div>
-                )}
-            </>
+                    </form>
+                </Form>
+            ) : (
+                // View Mode
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
+                    <div className='text-start flex flex-col space-y-2'>
+                        <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600">Program Studi</p>
+                        <span>
+                            {studyProgramOptions.find(option => option.value === user?.studyProgram)?.label || "-"}
+                        </span>
+                    </div>
+                    <div className='text-start flex flex-col space-y-2'>
+                        <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600">NIM</p>
+                        <span>{user?.nim}</span>
+                    </div>
+                    <div className='text-start flex flex-col space-y-2'>
+                        <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600">Nomor Telepon</p>
+                        <span>{user?.phoneNumber || "-"}</span>
+                    </div>
+                </div>
+            )}
 
         </div>
 

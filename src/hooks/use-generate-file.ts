@@ -37,11 +37,9 @@ export function useGenerateFile(submissionId: string | null) {
         }
 
         if (previousUrlRef.current) {
-            console.log("Revoking previous URL:", previousUrlRef.current);
             URL.revokeObjectURL(previousUrlRef.current);
         }
         const url = URL.createObjectURL(query.data);
-        console.log("Creating new URL:", url);
         previousUrlRef.current = url;
         setPdfBlobUrl(url);
 
@@ -49,7 +47,8 @@ export function useGenerateFile(submissionId: string | null) {
             URL.revokeObjectURL(url);
             previousUrlRef.current = null;
         };
-    }, [query.data]);
+        
+    }, [query.data, query.dataUpdatedAt]);
 
     return {
         ...query,
